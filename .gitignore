@@ -1,0 +1,21 @@
+# Java
+*.class
+*.log
+*.jar
+*.war
+
+# Build output
+target/
+
+# IDE settings
+.idea/
+.vscode/
+*.iml
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Sensitive config files
+application.properties
+application-dev.properties
