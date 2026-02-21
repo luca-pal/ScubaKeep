@@ -1,53 +1,116 @@
 package com.lucap.scubakeep.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 /**
- * Entity representing a diver in the system.
+ * Entity representing a user (diver) in the system.
  * <p>
- * Contains personal details, certification level, specialties,
- * total logged dives, and a computed rank based on dive count.
+ * Contains authentication data (username, email, password, role),
+ * personal information (name, country, profile picture),
+ * and dive-related profile data such as certification level,
+ * specialties, total logged dives, and a computed rank.
  * The diver can be associated with multiple dive logs.
  */
 @Entity
-@Table(name = "divers")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Table(
+        name = "divers",
+        // Still need to check for uniqueness at application level
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uq_divers_email", columnNames = "email"),
+                @UniqueConstraint(name = "uq_divers_username", columnNames = "username")
+        }
+)
 public class Diver {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
-    @NotBlank(message = "First name is required")
-    @Size(max = 50, message = "First name must be at most 50 characters")
+    @Column(name = "username", nullable = false, length = 40)
+    private String username;
+
+    @Column(name = "email", nullable = false, length = 120)
+    private String email;
+
+    @JsonIgnore
+    @Column(name = "password", nullable = false)
+    private String password;
+
     @Column(name = "first_name", nullable = false, length = 50)
     private String firstName;
 
-    @NotBlank(message = "Last name is required")
-    @Size(max = 50, message = "Last name must be at most 50 characters")
     @Column(name = "last_name", nullable = false, length = 50)
     private String lastName;
 
+    @Column(name = "country_code", length = 2, nullable = false)
+    private String countryCode;
+
+    /**
+     * Optional URL or path to the user's profile picture.
+     * If null, the API should respond with a default placeholder URL.
+     */
+    @Column(name = "profile_picture_path", length = 255)
+    private String profilePicturePath;
+
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", length = 16, nullable = false)
+    private Role role;
+
     @Min(value = 0, message = "Total dives must be 0 or greater")
-    @Column(name = "total_dives")
+    @Builder.Default
+    @Column(name = "total_dives", nullable = false)
     private int totalDives = 0;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "highest_certification")
+    @Column(name = "highest_certification", nullable = false, length = 50)
     private Certification highestCertification;
 
+    /**
+     * Specialties are stored as simple String values (not as a separate entity).
+     * Persisted in the "diver_specialties" table with two columns:
+     * - diver_id: foreign key to divers.id
+     * - specialty: the String value
+     * If the set is empty, the diver has no specialties, so no rows in diver_specialties.
+     */
     @ElementCollection
     @CollectionTable(
             name = "diver_specialties",
-            joinColumns = @JoinColumn(name = "diver_id"))
-    @Column(name = "specialty")
+            joinColumns = @JoinColumn(name = "diver_id"),
+            uniqueConstraints = @UniqueConstraint(
+                    name = "uq_diver_specialty",
+                    columnNames = {"diver_id", "specialty"}
+            )
+    )
+    @Builder.Default
+    @Column(name = "specialty", nullable = false, length = 50)
     private Set<String> specialties = new HashSet<>();
+
+    // UTC, time-zone independent compared to LocalDateTime
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false, nullable = false)
+    private Instant createdAt;
+
+    // UTC, time-zone independent compared to LocalDateTime
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 
     /**
      * Computed property used in JSON responses to reflect the diver's rank
@@ -58,65 +121,7 @@ public class Diver {
     @Transient
     @JsonProperty("rank")
     public String getRank() {
-        return Rank.fromTotalDives(this.totalDives).getDisplayName();
-    }
-
-    public Diver() {}
-
-    public Diver(String firstName, String lastName, int totalDives, Certification highestCertification,
-                 Set<String> specialties) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.totalDives = totalDives;
-        this.highestCertification = highestCertification;
-        this.specialties = specialties;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public int getTotalDives() {
-        return totalDives;
-    }
-
-    public void setTotalDives(int totalDives) {
-        this.totalDives = totalDives;
-    }
-
-    public Certification getHighestCertification() {
-        return highestCertification;
-    }
-
-    public void setHighestCertification(Certification highestCertification) {
-        this.highestCertification = highestCertification;
-    }
-
-    public Set<String> getSpecialties() {
-        return specialties;
-    }
-
-    public void setSpecialties(Set<String> specialties) {
-        this.specialties = specialties;
+        int dives = Math.max(0, this.totalDives);
+        return Rank.fromTotalDives(dives).getDisplayName();
     }
 }

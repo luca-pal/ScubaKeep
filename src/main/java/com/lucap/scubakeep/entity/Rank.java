@@ -1,15 +1,13 @@
 package com.lucap.scubakeep.entity;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-
 /**
  * Enumeration representing diver ranks based on total number of logged dives.
  * <p>
- * Each rank has a human-readable label returned in API responses via {@link JsonValue}.
- * The static method {@link #fromTotalDives(int)} computes a diver's rank threshold.
+ * Each rank has a human-readable label. {@link #fromTotalDives(int)} computes
+ * the rank based on threshold rules.
  */
 public enum Rank {
-    NONE("Rookie Diver"),
+    ROOKIE("Rookie Diver"),
     IRON("Iron Diver"),
     BRONZE("Bronze Diver"),
     SILVER("Silver Diver"),
@@ -29,7 +27,6 @@ public enum Rank {
      *
      * @return the display name (like "Gold Diver")
      */
-    @JsonValue
     public String getDisplayName() {
         return displayName;
     }
@@ -48,6 +45,6 @@ public enum Rank {
         else if (totalDives >= 50) return SILVER;
         else if (totalDives >= 25) return BRONZE;
         else if (totalDives >= 10) return IRON;
-        else return NONE;
+        else return ROOKIE;
     }
 }
