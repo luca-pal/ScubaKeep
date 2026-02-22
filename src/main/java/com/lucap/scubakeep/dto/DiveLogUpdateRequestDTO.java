@@ -37,11 +37,11 @@ public class DiveLogUpdateRequestDTO {
 
     @NotNull(message = "Maximum depth is required")
     @DecimalMin(value = "1.0", message = "Maximum depth must be 1 or greater")
-    private double maxDepth;
+    private Double maxDepth;
 
     @NotNull(message = "Duration is required")
     @Min(value = 1, message = "Duration must be 1 or greater")
-    private int duration;
+    private Integer duration;
 
     @Size(max = 50, message = "Dive buddy must be at most 50 characters")
     private String diveBuddy;

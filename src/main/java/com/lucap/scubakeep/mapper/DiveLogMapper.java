@@ -2,6 +2,7 @@ package com.lucap.scubakeep.mapper;
 
 import com.lucap.scubakeep.dto.DiveLogRequestDTO;
 import com.lucap.scubakeep.dto.DiveLogResponseDTO;
+import com.lucap.scubakeep.dto.DiveLogUpdateRequestDTO;
 import com.lucap.scubakeep.entity.DiveLog;
 import com.lucap.scubakeep.entity.Diver;
 
@@ -20,8 +21,27 @@ public class DiveLogMapper {
      * @return a new DiveLog entity
      */
     public static DiveLog toEntity(DiveLogRequestDTO dto, Diver diver) {
-        DiveLog diveLog = new DiveLog();
+        return DiveLog.builder()
+                .diveDate(dto.getDiveDate())
+                .location(dto.getLocation())
+                .diveSite(dto.getDiveSite())
+                .maxDepth(dto.getMaxDepth())
+                .duration(dto.getDuration())
+                .diveBuddy(dto.getDiveBuddy())
+                .notes(dto.getNotes())
+                .diver(diver)
+                .build();
+    }
 
+    /**
+     * Applies updates from a {@link DiveLogUpdateRequestDTO} to an existing {@link DiveLog} entity.
+     * <p>
+     * Does not modify the owning diver, id, or audit timestamps.
+     *
+     * @param diveLog the existing managed DiveLog entity
+     * @param dto     the DTO containing updated dive log data
+     */
+    public static void applyUpdates(DiveLog diveLog, DiveLogUpdateRequestDTO dto) {
         diveLog.setDiveDate(dto.getDiveDate());
         diveLog.setLocation(dto.getLocation());
         diveLog.setDiveSite(dto.getDiveSite());
@@ -29,9 +49,6 @@ public class DiveLogMapper {
         diveLog.setDuration(dto.getDuration());
         diveLog.setDiveBuddy(dto.getDiveBuddy());
         diveLog.setNotes(dto.getNotes());
-        diveLog.setDiver(diver);
-
-        return diveLog;
     }
 
     /**
@@ -41,21 +58,21 @@ public class DiveLogMapper {
      * @return a corresponding DiveLogResponseDTO
      */
     public static DiveLogResponseDTO toResponseDTO(DiveLog diveLog) {
-        DiveLogResponseDTO dto = new DiveLogResponseDTO();
-
-        dto.setId(diveLog.getId());
-        dto.setDiveDate(diveLog.getDiveDate());
-        dto.setLocation(diveLog.getLocation());
-        dto.setDiveSite(diveLog.getDiveSite());
-        dto.setMaxDepth(diveLog.getMaxDepth());
-        dto.setDuration(diveLog.getDuration());
-        dto.setNotes(diveLog.getNotes());
-        dto.setDiveBuddy(diveLog.getDiveBuddy());
-
         Diver diver = diveLog.getDiver();
-        dto.setDiverId(diver.getId());
-        dto.setDiverName(diver.getFirstName() + " " + diver.getLastName());
 
-        return dto;
+        return DiveLogResponseDTO.builder()
+                .id(diveLog.getId())
+                .diveDate(diveLog.getDiveDate())
+                .location(diveLog.getLocation())
+                .diveSite(diveLog.getDiveSite())
+                .maxDepth(diveLog.getMaxDepth())
+                .duration(diveLog.getDuration())
+                .notes(diveLog.getNotes())
+                .diveBuddy(diveLog.getDiveBuddy())
+                .diverId(diver.getId())
+                .diverUsername(diver.getUsername())
+                .createdAt(diveLog.getCreatedAt())
+                .updatedAt(diveLog.getUpdatedAt())
+                .build();
     }
 }

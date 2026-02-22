@@ -42,7 +42,7 @@ public class DiveLogRequestDTO {
     @Size(max = 50, message = "Dive buddy must be at most 50 characters")
     private String diveBuddy;
 
-    @Size(max = 500, message = "Notes must be at most 50 characters")
+    @Size(max = 500, message = "Notes must be at most 500 characters")
     private String notes;
 
     @NotNull(message = "Diver ID is required")
