@@ -38,7 +38,6 @@ public class DiverMapper {
                 .lastName(dto.getLastName())
                 .highestCertification(dto.getHighestCertification())
                 .specialties(copySpecialties(dto.getSpecialties()))
-                .totalDives(0)
                 .build();
     }
 

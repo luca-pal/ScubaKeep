@@ -1,23 +1,28 @@
 package com.lucap.scubakeep.service;
 
 import com.lucap.scubakeep.dto.DiveLogRequestDTO;
+import com.lucap.scubakeep.dto.DiveLogResponseDTO;
+import com.lucap.scubakeep.dto.DiveLogUpdateRequestDTO;
 import com.lucap.scubakeep.entity.DiveLog;
 import com.lucap.scubakeep.entity.Diver;
 import com.lucap.scubakeep.exception.DiveLogNotFoundException;
+import com.lucap.scubakeep.exception.DiverNotFoundException;
 import com.lucap.scubakeep.mapper.DiveLogMapper;
 import com.lucap.scubakeep.repository.DiveLogRepository;
+import com.lucap.scubakeep.repository.DiverRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
- * Service implementation for managing {@link DiveLog} entities.
+ * Service implementation for dive log management.
  * <p>
- * Handles creation, retrieval, update, and deletion of dive logs,
- * and ensures the {@link Diver}'s total dive count stays synchronized.
+ * Coordinates persistence of {@link DiveLog} entities and ensures
+ * the associated {@link Diver}'s total dive count remains synchronized.
  */
 @Service
 public class DiveLogServiceImpl implements DiveLogService {
@@ -25,49 +30,53 @@ public class DiveLogServiceImpl implements DiveLogService {
     private static final Logger logger = LoggerFactory.getLogger(DiveLogServiceImpl.class);
 
     private final DiveLogRepository diveLogRepository;
-    private final DiverService diverService;
+    private final DiverRepository diverRepository;
 
-    public DiveLogServiceImpl(DiveLogRepository diveLogRepository, DiverService diverService) {
+    public DiveLogServiceImpl(DiveLogRepository diveLogRepository, DiverRepository diverRepository) {
         this.diveLogRepository = diveLogRepository;
-        this.diverService = diverService;
+        this.diverRepository = diverRepository;
     }
 
     /**
      * Retrieves all dive logs stored in the system.
      *
-     * @return a list of all {@link DiveLog} entities
+     * @return a list of all dive logs as {@link DiveLogResponseDTO}
      */
     @Override
-    public List<DiveLog> getAllDiveLogs() {
+    @Transactional(readOnly = true)
+    public List<DiveLogResponseDTO> getAllDiveLogs() {
         logger.info("Fetching all dive logs");
-        return diveLogRepository.findAll();
+        return diveLogRepository.findAll()
+                .stream()
+                .map(DiveLogMapper::toResponseDTO)
+                .toList();
     }
 
     /**
-     * Creates and saves a new dive log.
-     * Also increments the diver's total dive count.
+     * Creates and saves a new dive log and increments the diver's total dive count.
      *
-     * @param dto the dive log request DTO
-     * @return the saved {@link DiveLog} entity
-     * @throws com.lucap.scubakeep.exception.DiverNotFoundException if the referenced diver does not exist
+     * @param dto the dive log request data
+     * @return the created dive log as {@link DiveLogResponseDTO}
+     * @throws DiverNotFoundException if the referenced diver does not exist
      */
     @Override
     @Transactional
-    public DiveLog createDiveLog(DiveLogRequestDTO dto) {
+    public DiveLogResponseDTO createDiveLog(DiveLogRequestDTO dto) {
 
         // Extract diver id from dto, fetch managed Diver from DB or throws DiverNotFoundException
-        Long diverId = dto.getDiverId();
+        UUID diverId = dto.getDiverId();
         logger.info("Creating dive log for diver ID {}", diverId);
-        Diver diver = diverService.getDiverById(diverId);
 
-        // Use mapper to convert dto + managed Diver into new DiveLog entity and persist the DiveLog
+        Diver diver = diverRepository.findById(diverId)
+                .orElseThrow(() -> new DiverNotFoundException(diverId));
+
         DiveLog diveLog = DiveLogMapper.toEntity(dto, diver);
         DiveLog saved = diveLogRepository.save(diveLog);
 
-        // Diver is a managed entity within this transaction, so change gets flushed to DB
-        diverService.incrementTotalDives(diverId);
-        logger.info("Dive log created with ID {} and diver {} total dives incremented", saved.getId(), diverId);
-        return saved;
+        diver.setTotalDives(diver.getTotalDives() + 1);
+
+        logger.info("Dive log created with ID {} for diver ID {}", saved.getId(), diverId);
+        return DiveLogMapper.toResponseDTO(saved);
     }
 
     /**
@@ -78,10 +87,12 @@ public class DiveLogServiceImpl implements DiveLogService {
      * @throws DiveLogNotFoundException if no log is found for the given ID
      */
     @Override
-    public DiveLog getDiveLogById(Long id) {
+    @Transactional(readOnly = true)
+    public DiveLogResponseDTO getDiveLogById(Long id) {
         logger.info("Fetching dive log with ID {}", id);
-        return diveLogRepository.findById(id)
+        DiveLog diveLog = diveLogRepository.findById(id)
                 .orElseThrow(() -> new DiveLogNotFoundException(id));
+        return DiveLogMapper.toResponseDTO(diveLog);
     }
 
     /**
@@ -94,13 +105,18 @@ public class DiveLogServiceImpl implements DiveLogService {
     @Transactional
     public void deleteDiveLog(Long id) {
         logger.info("Deleting dive log with ID {}", id);
+
         DiveLog diveLog = diveLogRepository.findById(id)
                 .orElseThrow(() -> new DiveLogNotFoundException(id));
 
+        Diver diver = diveLog.getDiver();
+
         diveLogRepository.delete(diveLog);
-        diverService.decrementTotalDives(diveLog.getDiver().getId());
-        logger.info("Dive log with ID {} deleted. Diver ID {} total dives decremented",
-                id, diveLog.getDiver().getId());
+
+        // decrement but not below 0
+        diver.setTotalDives(Math.max(0, diver.getTotalDives() - 1));
+
+        logger.info("Dive log with ID {} deleted; diver ID {} total dives decremented", id, diver.getId());
     }
 
     /**
@@ -115,34 +131,15 @@ public class DiveLogServiceImpl implements DiveLogService {
      */
     @Override
     @Transactional
-    public DiveLog updateDiveLog(Long id, DiveLogRequestDTO dto) {
+    public DiveLogResponseDTO updateDiveLog(Long id, DiveLogUpdateRequestDTO dto) {
         logger.info("Updating dive log with ID {}", id);
+
         DiveLog diveLog = diveLogRepository.findById(id)
                 .orElseThrow(() -> new DiveLogNotFoundException(id));
 
-        diveLog.setDiveDate(dto.getDiveDate());
-        diveLog.setLocation(dto.getLocation());
-        diveLog.setDiveSite(dto.getDiveSite());
-        diveLog.setMaxDepth(dto.getMaxDepth());
-        diveLog.setDuration(dto.getDuration());
-        diveLog.setNotes(dto.getNotes());
-        diveLog.setDiveBuddy(dto.getDiveBuddy());
+        DiveLogMapper.applyUpdates(diveLog, dto);
 
-        Long updatedDiverId = dto.getDiverId();
-        Long oldDiverId = diveLog.getDiver().getId();
-
-        // Check if diver changed,update totalDives if so
-        if (!oldDiverId.equals(updatedDiverId)) {
-            logger.info("Changing diver from ID {} to ID {}", oldDiverId, updatedDiverId);
-            diverService.decrementTotalDives(oldDiverId);
-            diverService.incrementTotalDives(updatedDiverId);
-        }
-
-        // Fetch the managed Diver from DB instead of using the one in the JSON
-        Diver managedDiver = diverService.getDiverById(updatedDiverId);
-        diveLog.setDiver(managedDiver);
-
-        logger.info("Dive log with ID {} successfully updated", id);
-        return diveLogRepository.save(diveLog);
+        logger.info("Dive log with ID {} updated successfully", id);
+        return DiveLogMapper.toResponseDTO(diveLog);
     }
 }
