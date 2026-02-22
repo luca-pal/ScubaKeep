@@ -6,5 +6,5 @@ package com.lucap.scubakeep.entity;
  */
 public enum Role {
     USER,
-    ADMIN;
+    ADMIN
 }
