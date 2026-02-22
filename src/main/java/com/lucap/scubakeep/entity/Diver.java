@@ -68,7 +68,6 @@ public class Diver {
     @Column(name = "profile_picture_path", length = 255)
     private String profilePicturePath;
 
-
     @Enumerated(EnumType.STRING)
     @Column(name = "role", length = 16, nullable = false)
     private Role role;

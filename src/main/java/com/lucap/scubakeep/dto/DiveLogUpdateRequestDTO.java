@@ -1,24 +1,28 @@
 package com.lucap.scubakeep.dto;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 /**
- * Data Transfer Object for creating dive log entries.
+ * Data Transfer Object for updating dive log entries.
  * <p>
- * Includes validation annotations to enforce business rules before reaching the service layer.
+ * Used to validate and transfer updated dive log data from client requests.
+ * Does not allow changing the owning diver.
  */
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class DiveLogRequestDTO {
+public class DiveLogUpdateRequestDTO {
 
     @NotNull(message = "Dive date is required")
     private LocalDate diveDate;
@@ -33,18 +37,15 @@ public class DiveLogRequestDTO {
 
     @NotNull(message = "Maximum depth is required")
     @DecimalMin(value = "1.0", message = "Maximum depth must be 1 or greater")
-    private Double maxDepth;
+    private double maxDepth;
 
     @NotNull(message = "Duration is required")
     @Min(value = 1, message = "Duration must be 1 or greater")
-    private Integer duration;
+    private int duration;
 
     @Size(max = 50, message = "Dive buddy must be at most 50 characters")
     private String diveBuddy;
 
-    @Size(max = 500, message = "Notes must be at most 50 characters")
+    @Size(max = 1000, message = "Notes must be at most 1000 characters")
     private String notes;
-
-    @NotNull(message = "Diver ID is required")
-    private UUID diverId;
 }

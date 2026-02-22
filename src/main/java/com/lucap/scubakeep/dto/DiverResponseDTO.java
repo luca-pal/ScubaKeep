@@ -1,76 +1,44 @@
 package com.lucap.scubakeep.dto;
 
+import com.lucap.scubakeep.entity.Certification;
+import com.lucap.scubakeep.entity.Role;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.Instant;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Data Transfer Object used to return diver information in API responses.
  * <p>
- * Contains diver identity, certification details, specialties,
- * total number of logged dives, and computed rank.
+ * Does not include sensitive fields such as password.
  */
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class DiverResponseDTO {
 
-    private Long id;
+    private UUID id;
+
+    private String username;
+    private String email;
+
     private String firstName;
     private String lastName;
-    private String highestCertification;
-    private Set<String> specialties;
+    private String countryCode;
+    private String profilePicturePath;
+
+    private Role role;
+
     private int totalDives;
+    private Certification highestCertification;
+    private Set<String> specialties;
     private String rank;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getHighestCertification() {
-        return highestCertification;
-    }
-
-    public void setHighestCertification(String highestCertification) {
-        this.highestCertification = highestCertification;
-    }
-
-    public Set<String> getSpecialties() {
-        return specialties;
-    }
-
-    public void setSpecialties(Set<String> specialties) {
-        this.specialties = specialties;
-    }
-
-    public int getTotalDives() {
-        return totalDives;
-    }
-
-    public void setTotalDives(int totalDives) {
-        this.totalDives = totalDives;
-    }
-
-    public String getRank() {
-        return rank;
-    }
-
-    public void setRank(String rank) {
-        this.rank = rank;
-    }
+    private Instant createdAt;
+    private Instant updatedAt;
 }

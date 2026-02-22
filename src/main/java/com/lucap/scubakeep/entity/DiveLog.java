@@ -37,10 +37,10 @@ public class DiveLog {
     private String diveSite;
 
     @Column(name = "maximum_depth", nullable = false)
-    private double maxDepth;
+    private Double maxDepth;
 
     @Column(name = "duration", nullable = false)
-    private int duration;
+    private Integer duration;
 
     @Column(name = "dive_buddy", length = 50)
     private String diveBuddy;
