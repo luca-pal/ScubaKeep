@@ -1,9 +1,9 @@
 package com.lucap.scubakeep.exception;
 
+import java.util.UUID;
+
 /**
  * Exception thrown when a diver with the specified ID is not found in the system.
- * <p>
- * Typically used in service or controller layers to trigger a 404 Not Found response.
  */
 public class DiverNotFoundException extends RuntimeException {
 
@@ -12,7 +12,7 @@ public class DiverNotFoundException extends RuntimeException {
      *
      * @param id the ID of the diver that was not found
      */
-    public DiverNotFoundException(Long id) {
+    public DiverNotFoundException(UUID id) {
         super("Diver with id " + id + " not found");
     }
 }

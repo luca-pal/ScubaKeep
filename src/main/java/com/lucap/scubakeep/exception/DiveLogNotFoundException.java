@@ -2,8 +2,6 @@ package com.lucap.scubakeep.exception;
 
 /**
  * Exception thrown when a dive log with the specified ID cannot be found.
- * <p>
- * Typically used by service and controller layers to return a 404 Not Found response.
  */
 public class DiveLogNotFoundException extends RuntimeException {
 

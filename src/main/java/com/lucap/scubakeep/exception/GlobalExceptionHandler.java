@@ -12,10 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Global exception handler for the Dive Log application.
- * <p>
- * Converts uncaught exceptions into standardized HTTP error responses.
- * Handles validation errors and resource-not-found scenarios.
+ * Centralized exception handler for REST controllers.
+ * Maps domain-specific exceptions and validation errors to clean HTTP responses.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -23,48 +21,37 @@ public class GlobalExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
-     * Handles {@link DiverNotFoundException} and returns HTTP 404 with an error message.
-     *
-     * @param ex the exception thrown when a diver is not found
-     * @return a {@link ResponseEntity} with status 404 and error details
+     * Handles cases where a requested resource (diver, dive log) is not found.
+     * <p>
+     * Returns: 404 Not Found
      */
-    @ExceptionHandler(DiverNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleDiverNotFound(DiverNotFoundException ex) {
-        logger.warn("Diver not found: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", ex.getMessage()));
+    @ExceptionHandler({
+            DiverNotFoundException.class,
+            DiveLogNotFoundException.class
+    })
+    public ResponseEntity<Map<String, String>> handleNotFound(RuntimeException ex) {
+        logger.warn("Resource not found: {}", ex.getMessage());
+        Map<String, String> body = new HashMap<>();
+        body.put("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
     /**
-     * Handles validation failures from @Valid annotations on request DTOs.
-     * Returns a map of field-specific error messages with status 400.
-     *
-     * @param ex the validation exception thrown by Spring
-     * @return a {@link ResponseEntity} with validation errors
+     * Handles validation errors triggered by @Valid on request bodies.
+     * <p>
+     * Returns: 400 Bad Request with a map of field names to validation messages.
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationException(MethodArgumentNotValidException ex) {
-        logger.info("Validation failed: {} errors", ex.getBindingResult().getFieldErrors().size());
-        Map<String, String> validationErrors = new HashMap<>();
+    public ResponseEntity<Map<String, String>> handleValidation(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
 
-        ex.getBindingResult().getFieldErrors().forEach(fieldError -> {
-            validationErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
-        });
+        ex.getBindingResult().getFieldErrors().forEach(error ->
+                errors.put(error.getField(), error.getDefaultMessage())
+        );
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(validationErrors);
-    }
+        logger.warn("Validation failed for {} fields: {}",
+                errors.size(), errors.keySet());
 
-    /**
-     * Handles {@link DiveLogNotFoundException} and returns HTTP 404 with an error message.
-     *
-     * @param ex the exception thrown when a dive log is not found
-     * @return a {@link ResponseEntity} with status 404 and error details
-     */
-    @ExceptionHandler(DiveLogNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleDiveLogNotFound(DiveLogNotFoundException ex) {
-        logger.warn("Dive log not found: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", ex.getMessage()));
+        return ResponseEntity.badRequest().body(errors);
     }
 }
