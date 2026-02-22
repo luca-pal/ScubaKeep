@@ -2,8 +2,7 @@ package com.lucap.scubakeep.controller;
 
 import com.lucap.scubakeep.dto.DiverRequestDTO;
 import com.lucap.scubakeep.dto.DiverResponseDTO;
-import com.lucap.scubakeep.entity.Diver;
-import com.lucap.scubakeep.mapper.DiverMapper;
+import com.lucap.scubakeep.dto.DiverUpdateRequestDTO;
 import com.lucap.scubakeep.service.DiverService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -13,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
 /**
  * REST controller for managing divers.
@@ -41,30 +40,23 @@ public class DiverController {
     @GetMapping
     public ResponseEntity<List<DiverResponseDTO>> getAllDivers() {
         logger.info("Received request to fetch all divers");
-        List<Diver> divers = diverService.getAllDivers();
-        List<DiverResponseDTO> dtoList = divers.stream()
-                .map(DiverMapper::toResponseDTO)
-                .collect(Collectors.toList());
+        List<DiverResponseDTO> dtoList = diverService.getAllDivers();
         logger.info("Returning {} divers", dtoList.size());
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(dtoList);
+        return ResponseEntity.ok(dtoList);
     }
 
     /**
      * Creates a new diver.
      *
-     * @param diverRequestDTO the diver data
+     * @param dto the diver data
      * @return the created diver as a {@link DiverResponseDTO}
      */
     @PostMapping
-    public ResponseEntity<DiverResponseDTO> createDiver(@RequestBody @Valid DiverRequestDTO diverRequestDTO) {
-        logger.info("Received request to create a new diver: {}", diverRequestDTO);
-        Diver diver = DiverMapper.toEntity(diverRequestDTO);
-        Diver savedDiver = diverService.createDiver(diver);
-        DiverResponseDTO dto = DiverMapper.toResponseDTO(savedDiver);
-        logger.info("Diver created with ID {}", savedDiver.getId());
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(dto);
+    public ResponseEntity<DiverResponseDTO> createDiver(@RequestBody @Valid DiverRequestDTO dto) {
+        logger.info("Received request to create a new diver");
+        DiverResponseDTO created = diverService.createDiver(dto);
+        logger.info("Diver created with ID {}", created.getId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     /**
@@ -74,23 +66,20 @@ public class DiverController {
      * @return the diver as a {@link DiverResponseDTO}
      */
     @GetMapping("/{id}")
-    public ResponseEntity<DiverResponseDTO> getDiverById(@PathVariable Long id) {
+    public ResponseEntity<DiverResponseDTO> getDiverById(@PathVariable UUID id) {
         logger.info("Received request to fetch diver with ID {}", id);
-        Diver diver = diverService.getDiverById(id);
-        DiverResponseDTO dto = DiverMapper.toResponseDTO(diver);
-        logger.info("Returning diver with ID {}", id);
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(dto);
+        DiverResponseDTO dto = diverService.getDiverById(id);
+        return ResponseEntity.ok(dto);
     }
 
     /**
      * Deletes a diver by ID.
      *
      * @param id the diver ID
-     * @return HTTP 204 if deletion is successful
+     * @return HTTP 204 (No Content) if deletion is successful
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDiver(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteDiver(@PathVariable UUID id) {
         logger.info("Received request to delete diver with ID {}", id);
         diverService.deleteDiver(id);
         logger.info("Diver with ID {} deleted successfully", id);
@@ -101,18 +90,16 @@ public class DiverController {
      * Updates a diver by ID.
      *
      * @param id the diver ID
-     * @param diverRequestDTO the updated diver data
+     * @param dto the updated diver data
      * @return the updated diver as a {@link DiverResponseDTO}
      */
     @PutMapping("/{id}")
-    public ResponseEntity<DiverResponseDTO> updateDiver(@PathVariable Long id,
-                                             @RequestBody @Valid DiverRequestDTO diverRequestDTO) {
-        logger.info("Received request to update diver with ID {}: {}", id, diverRequestDTO);
-        Diver updatedDiver = DiverMapper.toEntity(diverRequestDTO);
-        Diver savedDiver = diverService.updateDiver(id, updatedDiver);
-        DiverResponseDTO dto = DiverMapper.toResponseDTO(savedDiver);
+    public ResponseEntity<DiverResponseDTO> updateDiver(
+            @PathVariable UUID id,
+            @RequestBody @Valid DiverUpdateRequestDTO dto) {
+        logger.info("Received request to update diver with ID {}", id);
+        DiverResponseDTO updated = diverService.updateDiver(id, dto);
         logger.info("Diver with ID {} updated successfully", id);
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(dto);
+        return ResponseEntity.ok(updated);
     }
 }

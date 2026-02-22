@@ -2,8 +2,7 @@ package com.lucap.scubakeep.controller;
 
 import com.lucap.scubakeep.dto.DiveLogRequestDTO;
 import com.lucap.scubakeep.dto.DiveLogResponseDTO;
-import com.lucap.scubakeep.entity.DiveLog;
-import com.lucap.scubakeep.mapper.DiveLogMapper;
+import com.lucap.scubakeep.dto.DiveLogUpdateRequestDTO;
 import com.lucap.scubakeep.service.DiveLogService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -13,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * REST controller for managing dive logs.
@@ -41,29 +39,23 @@ public class DiveLogController {
     @GetMapping
     public ResponseEntity<List<DiveLogResponseDTO>> getAllDiveLogs() {
         logger.info("Received request to fetch all dive logs");
-        List<DiveLog> diveLogs = diveLogService.getAllDiveLogs();
-        List<DiveLogResponseDTO> dtoList = diveLogs.stream()
-                .map(DiveLogMapper::toResponseDTO)
-                .collect(Collectors.toList());
+        List<DiveLogResponseDTO> dtoList = diveLogService.getAllDiveLogs();
         logger.info("Returning {} dive logs", dtoList.size());
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(dtoList);
+        return ResponseEntity.ok(dtoList);
     }
 
     /**
      * Creates a new dive log entry.
      *
-     * @param diveLogRequestDTO the details of the dive to be created
+     * @param dto the details of the dive to be created
      * @return the created dive log as a {@link DiveLogResponseDTO}
      */
     @PostMapping
-    public ResponseEntity<DiveLogResponseDTO> createDiveLog(@RequestBody @Valid DiveLogRequestDTO diveLogRequestDTO) {
-        logger.info("Received request to create a new dive log: {}", diveLogRequestDTO);
-        DiveLog savedLog = diveLogService.createDiveLog(diveLogRequestDTO);
-        DiveLogResponseDTO dto = DiveLogMapper.toResponseDTO(savedLog);
-        logger.info("Dive log created with ID {}", savedLog.getId());
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(dto);
+    public ResponseEntity<DiveLogResponseDTO> createDiveLog(@RequestBody @Valid DiveLogRequestDTO dto) {
+        logger.info("Received request to create a new dive log");
+        DiveLogResponseDTO created = diveLogService.createDiveLog(dto);
+        logger.info("Dive log created with ID {}", created.getId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     /**
@@ -75,11 +67,8 @@ public class DiveLogController {
     @GetMapping("/{id}")
     public ResponseEntity<DiveLogResponseDTO> getDiveLogById(@PathVariable Long id) {
         logger.info("Received request to retrieve dive log with ID {}", id);
-        DiveLog diveLog = diveLogService.getDiveLogById(id);
-        DiveLogResponseDTO dto = DiveLogMapper.toResponseDTO(diveLog);
-        logger.info("Returning dive log with ID {}", id);
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(dto);
+        DiveLogResponseDTO dto = diveLogService.getDiveLogById(id);
+        return ResponseEntity.ok(dto);
     }
 
     /**
@@ -99,18 +88,17 @@ public class DiveLogController {
     /**
      * Updates an existing dive log.
      *
-     * @param id                the ID of the dive log to update
-     * @param diveLogRequestDTO the new data for the dive log
+     * @param id the ID of the dive log to update
+     * @param dto the new data for the dive log
      * @return the updated dive log as a {@link DiveLogResponseDTO}
      */
     @PutMapping("/{id}")
-    public ResponseEntity<DiveLogResponseDTO> updateDiveLog(@PathVariable Long id,
-                                                 @RequestBody @Valid DiveLogRequestDTO diveLogRequestDTO) {
-        logger.info("Received request to update dive log with ID {}: {}", id, diveLogRequestDTO);
-        DiveLog diveLog = diveLogService.updateDiveLog(id, diveLogRequestDTO);
-        DiveLogResponseDTO dto = DiveLogMapper.toResponseDTO(diveLog);
+    public ResponseEntity<DiveLogResponseDTO> updateDiveLog(
+            @PathVariable Long id,
+            @RequestBody @Valid DiveLogUpdateRequestDTO dto) {
+        logger.info("Received request to update dive log with ID {}", id);
+        DiveLogResponseDTO updated = diveLogService.updateDiveLog(id, dto);
         logger.info("Dive log with ID {} updated successfully", id);
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(dto);
+        return ResponseEntity.ok(updated);
     }
 }
