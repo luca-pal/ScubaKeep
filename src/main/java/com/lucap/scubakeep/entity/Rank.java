@@ -3,7 +3,7 @@ package com.lucap.scubakeep.entity;
 /**
  * Enumeration representing diver ranks based on total number of logged dives.
  * <p>
- * Each rank has a human-readable label. {@link #fromTotalDives(int)} computes
+ * Each rank has a human-readable label. {@link #fromTotalDives(long)} computes
  * the rank based on threshold rules.
  */
 public enum Rank {
@@ -37,7 +37,7 @@ public enum Rank {
      * @param totalDives the number of dives logged
      * @return the corresponding {@link Rank} enum value
      */
-    public static Rank fromTotalDives(int totalDives) {
+    public static Rank fromTotalDives(long totalDives) {
         if (totalDives >= 1000) return DIAMOND;
         else if (totalDives >= 500) return EMERALD;
         else if (totalDives >= 200) return PLATINUM;

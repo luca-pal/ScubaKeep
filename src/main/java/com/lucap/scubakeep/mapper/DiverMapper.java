@@ -4,6 +4,7 @@ import com.lucap.scubakeep.dto.DiverRequestDTO;
 import com.lucap.scubakeep.dto.DiverResponseDTO;
 import com.lucap.scubakeep.dto.DiverUpdateRequestDTO;
 import com.lucap.scubakeep.entity.Diver;
+import com.lucap.scubakeep.entity.Rank;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -65,11 +66,19 @@ public class DiverMapper {
 
     /**
      * Converts a {@link Diver} entity into a {@link DiverResponseDTO}.
+     * <p>
+     * {@code totalDives} is computed from {@code DiveLog} records (not stored on the Diver entity).
+     * {@code rank} is derived from the computed total dive count.
      *
      * @param diver the Diver entity
+     * @param totalDives the total number of dives logged for this diver (computed externally)
      * @return a DTO containing diver information for API responses
      */
-    public static DiverResponseDTO toResponseDTO(Diver diver) {
+    public static DiverResponseDTO toResponseDTO(Diver diver, long totalDives) {
+
+        long dives = Math.max(0L, totalDives);
+        String rank = Rank.fromTotalDives(dives).getDisplayName();
+
         return DiverResponseDTO.builder()
                 .id(diver.getId())
                 .username(diver.getUsername())
@@ -81,8 +90,8 @@ public class DiverMapper {
                 .role(diver.getRole())
                 .highestCertification(diver.getHighestCertification())
                 .specialties(copySpecialties(diver.getSpecialties()))
-                .totalDives(diver.getTotalDives())
-                .rank(diver.getRank())
+                .totalDives(dives)
+                .rank(rank)
                 .createdAt(diver.getCreatedAt())
                 .updatedAt(diver.getUpdatedAt())
                 .build();

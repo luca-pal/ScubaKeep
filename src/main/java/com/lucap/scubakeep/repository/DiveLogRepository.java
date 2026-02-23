@@ -15,4 +15,7 @@ import java.util.UUID;
 public interface DiveLogRepository extends JpaRepository<DiveLog, Long> {
 
     java.util.List<DiveLog> findByDiverId(UUID diverId);
+
+    // Can cause performance issue with getAllDivers() with N+1 queries
+    long countByDiverId(UUID diverId);
 }

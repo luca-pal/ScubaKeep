@@ -9,6 +9,7 @@ import com.lucap.scubakeep.exception.DiverNotFoundException;
 import com.lucap.scubakeep.exception.EmailAlreadyExistsException;
 import com.lucap.scubakeep.exception.UsernameAlreadyExistsException;
 import com.lucap.scubakeep.mapper.DiverMapper;
+import com.lucap.scubakeep.repository.DiveLogRepository;
 import com.lucap.scubakeep.repository.DiverRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,10 +30,12 @@ public class DiverServiceImpl implements DiverService {
     private static final Logger logger = LoggerFactory.getLogger(DiverServiceImpl.class);
 
     private final DiverRepository diverRepository;
+    private final DiveLogRepository diveLogRepository;
     // private final PasswordEncoder passwordEncoder;
 
-    public DiverServiceImpl(DiverRepository diverRepository) {
+    public DiverServiceImpl(DiverRepository diverRepository, DiveLogRepository diveLogRepository) {
         this.diverRepository = diverRepository;
+        this.diveLogRepository = diveLogRepository;
     }
 
     /**
@@ -43,9 +46,15 @@ public class DiverServiceImpl implements DiverService {
     @Override
     public List<DiverResponseDTO> getAllDivers() {
         logger.info("Fetching all divers");
-        return diverRepository.findAll()
-                .stream()
-                .map(DiverMapper::toResponseDTO)
+
+        List<Diver> divers = diverRepository.findAll();
+
+        // N+1 risk: This performs one COUNT query per diver.
+        return divers.stream()
+                .map(diver -> {
+                    long totalDives = diveLogRepository.countByDiverId(diver.getId());
+                    return DiverMapper.toResponseDTO(diver, totalDives);
+                })
                 .toList();
     }
 
@@ -56,7 +65,7 @@ public class DiverServiceImpl implements DiverService {
      * Password must be encoded before persistence.
      *
      * @param dto the incoming request data for creating a diver
-     * @return the created diver as {@link DiverResponseDTO}
+     * @return the created diver as {@link DiverResponseDTO} with 0 totalDives
      */
     @Override
     @Transactional
@@ -76,7 +85,6 @@ public class DiverServiceImpl implements DiverService {
 
         // Server-managed fields
         diver.setRole(Role.USER);
-        diver.setTotalDives(0);
 
         // Password handling
         // diver.setPassword(passwordEncoder.encode(dto.getPassword()));
@@ -84,7 +92,7 @@ public class DiverServiceImpl implements DiverService {
 
         Diver saved = diverRepository.save(diver);
         logger.info("Created new diver with ID {}", saved.getId());
-        return DiverMapper.toResponseDTO(saved);
+        return DiverMapper.toResponseDTO(saved, 0L);
     }
 
     /**
@@ -99,7 +107,10 @@ public class DiverServiceImpl implements DiverService {
         logger.info("Fetching diver with ID {}", id);
         Diver diver = diverRepository.findById(id)
                 .orElseThrow(() -> new DiverNotFoundException(id));
-        return DiverMapper.toResponseDTO(diver);
+
+        long totalDives = diveLogRepository.countByDiverId(id);
+
+        return DiverMapper.toResponseDTO(diver, totalDives);
     }
 
     /**
@@ -135,8 +146,9 @@ public class DiverServiceImpl implements DiverService {
                 .orElseThrow(() -> new DiverNotFoundException(id));
 
         DiverMapper.applyUpdates(diver, dto);
+        long totalDives = diveLogRepository.countByDiverId(id);
 
         logger.info("Diver with ID {} updated successfully", id);
-        return DiverMapper.toResponseDTO(diver);
+        return DiverMapper.toResponseDTO(diver, totalDives);
     }
 }

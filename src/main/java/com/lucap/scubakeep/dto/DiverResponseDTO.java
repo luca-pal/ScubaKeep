@@ -34,7 +34,7 @@ public class DiverResponseDTO {
 
     private Role role;
 
-    private int totalDives;
+    private long totalDives;
     private Certification highestCertification;
     private Set<String> specialties;
     private String rank;

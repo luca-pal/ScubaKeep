@@ -53,7 +53,7 @@ public class DiveLogServiceImpl implements DiveLogService {
     }
 
     /**
-     * Creates and saves a new dive log and increments the diver's total dive count.
+     * Creates and saves a new dive log.
      *
      * @param dto the dive log request data
      * @return the created dive log as {@link DiveLogResponseDTO}
@@ -72,8 +72,6 @@ public class DiveLogServiceImpl implements DiveLogService {
 
         DiveLog diveLog = DiveLogMapper.toEntity(dto, diver);
         DiveLog saved = diveLogRepository.save(diveLog);
-
-        diver.setTotalDives(diver.getTotalDives() + 1);
 
         logger.info("Dive log created with ID {} for diver ID {}", saved.getId(), diverId);
         return DiveLogMapper.toResponseDTO(saved);
@@ -96,7 +94,7 @@ public class DiveLogServiceImpl implements DiveLogService {
     }
 
     /**
-     * Deletes a dive log and decrements the associated diver’s total dive count.
+     * Deletes a dive log.
      *
      * @param id the ID of the dive log to delete
      * @throws DiveLogNotFoundException if the dive log does not exist
@@ -112,9 +110,6 @@ public class DiveLogServiceImpl implements DiveLogService {
         Diver diver = diveLog.getDiver();
 
         diveLogRepository.delete(diveLog);
-
-        // decrement but not below 0
-        diver.setTotalDives(Math.max(0, diver.getTotalDives() - 1));
 
         logger.info("Dive log with ID {} deleted; diver ID {} total dives decremented", id, diver.getId());
     }

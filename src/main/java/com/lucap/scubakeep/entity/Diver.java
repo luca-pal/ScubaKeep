@@ -1,9 +1,7 @@
 package com.lucap.scubakeep.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -72,11 +70,6 @@ public class Diver {
     @Column(name = "role", length = 16, nullable = false)
     private Role role;
 
-    @Min(value = 0, message = "Total dives must be 0 or greater")
-    @Builder.Default
-    @Column(name = "total_dives", nullable = false)
-    private int totalDives = 0;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "highest_certification", nullable = false, length = 50)
     private Certification highestCertification;
@@ -110,17 +103,4 @@ public class Diver {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
-
-    /**
-     * Computed property used in JSON responses to reflect the diver's rank
-     * based on the total number of dives.
-     *
-     * @return display name of the computed rank
-     */
-    @Transient
-    @JsonProperty("rank")
-    public String getRank() {
-        int dives = Math.max(0, this.totalDives);
-        return Rank.fromTotalDives(dives).getDisplayName();
-    }
 }
