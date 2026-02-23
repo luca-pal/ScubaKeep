@@ -13,6 +13,7 @@ import com.lucap.scubakeep.repository.DiveLogRepository;
 import com.lucap.scubakeep.repository.DiverRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,11 +32,12 @@ public class DiverServiceImpl implements DiverService {
 
     private final DiverRepository diverRepository;
     private final DiveLogRepository diveLogRepository;
-    // private final PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
-    public DiverServiceImpl(DiverRepository diverRepository, DiveLogRepository diveLogRepository) {
+    public DiverServiceImpl(DiverRepository diverRepository, DiveLogRepository diveLogRepository, PasswordEncoder passwordEncoder) {
         this.diverRepository = diverRepository;
         this.diveLogRepository = diveLogRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -87,8 +89,7 @@ public class DiverServiceImpl implements DiverService {
         diver.setRole(Role.USER);
 
         // Password handling
-        // diver.setPassword(passwordEncoder.encode(dto.getPassword()));
-        diver.setPassword(dto.getPassword()); // placeholder until encoder is wired
+        diver.setPassword(passwordEncoder.encode(dto.getPassword()));
 
         Diver saved = diverRepository.save(diver);
         logger.info("Created new diver with ID {}", saved.getId());
