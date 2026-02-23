@@ -1,6 +1,7 @@
 package com.lucap.scubakeep.dto;
 
 import com.lucap.scubakeep.entity.Certification;
+import com.lucap.scubakeep.validation.CountryCode;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -47,7 +48,7 @@ public class DiverRequestDTO {
     private String lastName;
 
     @NotBlank(message = "Country code is required")
-    @Pattern(regexp = "^[A-Z]{2}$", message = "Country code must be a 2-letter ISO code (uppercase)")
+    @CountryCode
     private String countryCode;
 
     /**

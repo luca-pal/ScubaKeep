@@ -7,6 +7,7 @@ import com.lucap.scubakeep.entity.Diver;
 import com.lucap.scubakeep.entity.Rank;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -32,7 +33,7 @@ public class DiverMapper {
         return Diver.builder()
                 .username(dto.getUsername())
                 .email(dto.getEmail())
-                .countryCode(dto.getCountryCode())
+                .countryCode(normalizeCountryCode(dto.getCountryCode()))
                 .profilePicturePath(dto.getProfilePicturePath())
                 .firstName(dto.getFirstName())
                 .lastName(dto.getLastName())
@@ -54,7 +55,7 @@ public class DiverMapper {
 
         diver.setFirstName(dto.getFirstName());
         diver.setLastName(dto.getLastName());
-        diver.setCountryCode(dto.getCountryCode());
+        diver.setCountryCode(normalizeCountryCode(dto.getCountryCode()));
         diver.setProfilePicturePath(dto.getProfilePicturePath());
         diver.setHighestCertification(dto.getHighestCertification());
 
@@ -112,5 +113,16 @@ public class DiverMapper {
             return new HashSet<>();
         }
         return new HashSet<>(specialties);
+    }
+
+    /**
+     * Normalizes a country code string by trimming whitespace
+     * and converting it to uppercase using a locale-independent rule.
+     *
+     * @param countryCode the raw country code input
+     * @return the normalized country code in uppercase, or null if input is null
+     */
+    private static String normalizeCountryCode(String countryCode) {
+        return countryCode == null ? null : countryCode.trim().toUpperCase(Locale.ROOT);
     }
 }
