@@ -54,4 +54,22 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().body(errors);
     }
+
+    /**
+     * Handles conflicts caused by duplicate user attributes such as email or username.
+     * <p>
+     * Returns: 409 Conflict
+     */
+    @ExceptionHandler({
+            EmailAlreadyExistsException.class,
+            UsernameAlreadyExistsException.class
+    })
+    public ResponseEntity<Map<String, String>> handleConflict(RuntimeException ex) {
+
+        logger.warn("Conflict for duplicate user attributes detected: {}", ex.getMessage());
+
+        Map<String, String> body = new HashMap<>();
+        body.put("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
 }

@@ -5,7 +5,6 @@ import com.lucap.scubakeep.dto.DiverResponseDTO;
 import com.lucap.scubakeep.dto.DiverUpdateRequestDTO;
 import com.lucap.scubakeep.entity.Diver;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -58,7 +57,10 @@ public class DiverMapper {
         diver.setProfilePicturePath(dto.getProfilePicturePath());
         diver.setHighestCertification(dto.getHighestCertification());
 
-        diver.setSpecialties(copySpecialties(dto.getSpecialties()));
+        // Specialties only changes if client explicitly provides it
+        if (dto.getSpecialties() != null) {
+            diver.setSpecialties(copySpecialties(dto.getSpecialties()));
+        }
     }
 
     /**
@@ -91,14 +93,14 @@ public class DiverMapper {
      * <p>
      * Ensures that the returned set is never {@code null} and that
      * the entity does not hold a reference to the original DTO collection.
-     * Returns an immutable empty set if the input is {@code null} or empty.
+     * Returns an empty set if the input is {@code null} or empty.
      *
      * @param specialties the input set from the DTO
      * @return a non-null set safe to assign to the entity
      */
     private static Set<String> copySpecialties(Set<String> specialties) {
         if (specialties == null || specialties.isEmpty()) {
-            return Collections.emptySet();
+            return new HashSet<>();
         }
         return new HashSet<>(specialties);
     }

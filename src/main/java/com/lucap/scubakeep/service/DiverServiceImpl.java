@@ -6,6 +6,8 @@ import com.lucap.scubakeep.dto.DiverUpdateRequestDTO;
 import com.lucap.scubakeep.entity.Diver;
 import com.lucap.scubakeep.entity.Role;
 import com.lucap.scubakeep.exception.DiverNotFoundException;
+import com.lucap.scubakeep.exception.EmailAlreadyExistsException;
+import com.lucap.scubakeep.exception.UsernameAlreadyExistsException;
 import com.lucap.scubakeep.mapper.DiverMapper;
 import com.lucap.scubakeep.repository.DiverRepository;
 import org.slf4j.Logger;
@@ -59,6 +61,17 @@ public class DiverServiceImpl implements DiverService {
     @Override
     @Transactional
     public DiverResponseDTO createDiver(DiverRequestDTO dto) {
+
+        // 1. Check email uniqueness
+        if (diverRepository.existsByEmail(dto.getEmail())) {
+            throw new EmailAlreadyExistsException(dto.getEmail());
+        }
+
+        // 2. Check username uniqueness
+        if (diverRepository.existsByUsername(dto.getUsername())) {
+            throw new UsernameAlreadyExistsException(dto.getUsername());
+        }
+
         Diver diver = DiverMapper.toEntity(dto);
 
         // Server-managed fields
