@@ -32,7 +32,9 @@ public class DiverUserDetailsService implements UserDetailsService {
         Diver diver = diverRepository.findByUsername(identifier)
                 .or(() -> diverRepository.findByEmail(identifier))
                 .orElseThrow(() ->
-                        new UsernameNotFoundException("User not found (username or email): " + identifier));
+                        new UsernameNotFoundException(
+                                "User not found (username or email): " + identifier
+                        ));
 
         return new org.springframework.security.core.userdetails.User(
                 diver.getUsername(),

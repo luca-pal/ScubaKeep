@@ -23,7 +23,7 @@ import java.util.List;
 @RequestMapping("/api/divelogs")
 public class DiveLogController {
 
-    private static final Logger logger = LoggerFactory.getLogger(DiveLogController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DiveLogController.class);
 
     private final DiveLogService diveLogService;
 
@@ -38,9 +38,9 @@ public class DiveLogController {
      */
     @GetMapping
     public ResponseEntity<List<DiveLogResponseDTO>> getAllDiveLogs() {
-        logger.info("Received request to fetch all dive logs");
+        LOGGER.info("Received request to fetch all dive logs");
         List<DiveLogResponseDTO> dtoList = diveLogService.getAllDiveLogs();
-        logger.info("Returning {} dive logs", dtoList.size());
+        LOGGER.info("Returning {} dive logs", dtoList.size());
         return ResponseEntity.ok(dtoList);
     }
 
@@ -51,10 +51,12 @@ public class DiveLogController {
      * @return the created dive log as a {@link DiveLogResponseDTO}
      */
     @PostMapping
-    public ResponseEntity<DiveLogResponseDTO> createDiveLog(@RequestBody @Valid DiveLogRequestDTO dto) {
-        logger.info("Received request to create a new dive log");
+    public ResponseEntity<DiveLogResponseDTO> createDiveLog(
+            @RequestBody @Valid DiveLogRequestDTO dto
+    ) {
+        LOGGER.info("Received request to create a new dive log");
         DiveLogResponseDTO created = diveLogService.createDiveLog(dto);
-        logger.info("Dive log created with ID {}", created.getId());
+        LOGGER.info("Dive log created with ID {}", created.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
@@ -66,7 +68,7 @@ public class DiveLogController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<DiveLogResponseDTO> getDiveLogById(@PathVariable Long id) {
-        logger.info("Received request to retrieve dive log with ID {}", id);
+        LOGGER.info("Received request to retrieve dive log with ID {}", id);
         DiveLogResponseDTO dto = diveLogService.getDiveLogById(id);
         return ResponseEntity.ok(dto);
     }
@@ -79,9 +81,9 @@ public class DiveLogController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteDiveLogById(@PathVariable Long id) {
-        logger.info("Received request to delete dive log with ID {}", id);
+        LOGGER.info("Received request to delete dive log with ID {}", id);
         diveLogService.deleteDiveLog(id);
-        logger.info("Dive log with ID {} deleted successfully", id);
+        LOGGER.info("Dive log with ID {} deleted successfully", id);
         return ResponseEntity.noContent().build();
     }
 
@@ -96,9 +98,9 @@ public class DiveLogController {
     public ResponseEntity<DiveLogResponseDTO> updateDiveLog(
             @PathVariable Long id,
             @RequestBody @Valid DiveLogUpdateRequestDTO dto) {
-        logger.info("Received request to update dive log with ID {}", id);
+        LOGGER.info("Received request to update dive log with ID {}", id);
         DiveLogResponseDTO updated = diveLogService.updateDiveLog(id, dto);
-        logger.info("Dive log with ID {} updated successfully", id);
+        LOGGER.info("Dive log with ID {} updated successfully", id);
         return ResponseEntity.ok(updated);
     }
 }

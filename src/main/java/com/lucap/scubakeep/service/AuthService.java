@@ -4,7 +4,6 @@ import com.lucap.scubakeep.dto.TokenRequestDTO;
 import com.lucap.scubakeep.dto.TokenResponseDTO;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 /**
@@ -25,8 +24,10 @@ public class AuthService {
     }
 
     public TokenResponseDTO authenticate(TokenRequestDTO request) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getIdentifier(), request.getPassword())
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getIdentifier(),
+                        request.getPassword())
         );
 
         // Temporary placeholder token for now.

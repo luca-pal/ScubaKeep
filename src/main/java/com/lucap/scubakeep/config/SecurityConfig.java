@@ -80,7 +80,9 @@ public class SecurityConfig {
      * @throws Exception if the AuthenticationManager cannot be created
      */
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config
+    ) throws Exception {
         return config.getAuthenticationManager();
     }
 }

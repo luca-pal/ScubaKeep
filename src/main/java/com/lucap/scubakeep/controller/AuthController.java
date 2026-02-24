@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/auth")
 public class AuthController {
 
-    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthController.class);
 
     private final DiverService diverService;
     private final AuthService authService;
@@ -45,9 +45,9 @@ public class AuthController {
      */
     @PostMapping("/register")
     public ResponseEntity<DiverResponseDTO> register(@RequestBody @Valid DiverRequestDTO dto) {
-        logger.info("Received registration request for username='{}'", dto.getUsername());
+        LOGGER.info("Received registration request for username='{}'", dto.getUsername());
         DiverResponseDTO created = diverService.createDiver(dto);
-        logger.info("User registered with ID {}", created.getId());
+        LOGGER.info("User registered with ID {}", created.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 

@@ -30,8 +30,8 @@ import java.util.UUID;
         name = "divers",
         // Still need to check for uniqueness at application level
         uniqueConstraints = {
-                @UniqueConstraint(name = "uq_divers_email", columnNames = "email"),
-                @UniqueConstraint(name = "uq_divers_username", columnNames = "username")
+            @UniqueConstraint(name = "uq_divers_email", columnNames = "email"),
+            @UniqueConstraint(name = "uq_divers_username", columnNames = "username")
         }
 )
 public class Diver {

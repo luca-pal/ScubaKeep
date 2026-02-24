@@ -35,7 +35,8 @@ public class DiverRequestDTO {
     @Size(min = 8, max = 255, message = "Password must be at least 8 characters")
     @Pattern(
             regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$",
-            message = "Password must contain at least one lowercase letter, one uppercase letter, and one number"
+            message = "Password must contain at least one lowercase letter, "
+                    + "one uppercase letter, and one number"
     )
     private String password;
 

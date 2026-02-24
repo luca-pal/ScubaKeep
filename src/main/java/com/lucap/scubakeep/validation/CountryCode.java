@@ -17,7 +17,8 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface CountryCode {
 
-    String message() default "Country code must be a valid ISO 3166-1 alpha-2 code (ex: IT, AT, ES)";
+    String message() default "Country code must be a valid ISO 3166-1 alpha-2 code "
+            + "(ex: IT, AT, ES)";
 
     // Required to create a new annotation type, will not use them
     Class<?>[] groups() default {};

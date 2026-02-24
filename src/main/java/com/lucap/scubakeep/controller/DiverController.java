@@ -24,7 +24,7 @@ import java.util.UUID;
 @RequestMapping("/api/divers")
 public class DiverController {
 
-    private static final Logger logger = LoggerFactory.getLogger(DiverController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DiverController.class);
 
     private final DiverService diverService;
 
@@ -39,9 +39,9 @@ public class DiverController {
      */
     @GetMapping
     public ResponseEntity<List<DiverResponseDTO>> getAllDivers() {
-        logger.info("Received request to fetch all divers");
+        LOGGER.info("Received request to fetch all divers");
         List<DiverResponseDTO> dtoList = diverService.getAllDivers();
-        logger.info("Returning {} divers", dtoList.size());
+        LOGGER.info("Returning {} divers", dtoList.size());
         return ResponseEntity.ok(dtoList);
     }
 
@@ -53,9 +53,9 @@ public class DiverController {
      */
     @PostMapping
     public ResponseEntity<DiverResponseDTO> createDiver(@RequestBody @Valid DiverRequestDTO dto) {
-        logger.info("Received request to create a new diver");
+        LOGGER.info("Received request to create a new diver");
         DiverResponseDTO created = diverService.createDiver(dto);
-        logger.info("Diver created with ID {}", created.getId());
+        LOGGER.info("Diver created with ID {}", created.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
@@ -67,7 +67,7 @@ public class DiverController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<DiverResponseDTO> getDiverById(@PathVariable UUID id) {
-        logger.info("Received request to fetch diver with ID {}", id);
+        LOGGER.info("Received request to fetch diver with ID {}", id);
         DiverResponseDTO dto = diverService.getDiverById(id);
         return ResponseEntity.ok(dto);
     }
@@ -80,9 +80,9 @@ public class DiverController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteDiver(@PathVariable UUID id) {
-        logger.info("Received request to delete diver with ID {}", id);
+        LOGGER.info("Received request to delete diver with ID {}", id);
         diverService.deleteDiver(id);
-        logger.info("Diver with ID {} deleted successfully", id);
+        LOGGER.info("Diver with ID {} deleted successfully", id);
         return ResponseEntity.noContent().build();
     }
 
@@ -97,9 +97,9 @@ public class DiverController {
     public ResponseEntity<DiverResponseDTO> updateDiver(
             @PathVariable UUID id,
             @RequestBody @Valid DiverUpdateRequestDTO dto) {
-        logger.info("Received request to update diver with ID {}", id);
+        LOGGER.info("Received request to update diver with ID {}", id);
         DiverResponseDTO updated = diverService.updateDiver(id, dto);
-        logger.info("Diver with ID {} updated successfully", id);
+        LOGGER.info("Diver with ID {} updated successfully", id);
         return ResponseEntity.ok(updated);
     }
 }

@@ -28,13 +28,17 @@ import java.util.UUID;
 @Service
 public class DiverServiceImpl implements DiverService {
 
-    private static final Logger logger = LoggerFactory.getLogger(DiverServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DiverServiceImpl.class);
 
     private final DiverRepository diverRepository;
     private final DiveLogRepository diveLogRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public DiverServiceImpl(DiverRepository diverRepository, DiveLogRepository diveLogRepository, PasswordEncoder passwordEncoder) {
+    public DiverServiceImpl(
+            DiverRepository diverRepository,
+            DiveLogRepository diveLogRepository,
+            PasswordEncoder passwordEncoder
+    ) {
         this.diverRepository = diverRepository;
         this.diveLogRepository = diveLogRepository;
         this.passwordEncoder = passwordEncoder;
@@ -47,7 +51,7 @@ public class DiverServiceImpl implements DiverService {
      */
     @Override
     public List<DiverResponseDTO> getAllDivers() {
-        logger.info("Fetching all divers");
+        LOGGER.info("Fetching all divers");
 
         List<Diver> divers = diverRepository.findAll();
 
@@ -92,7 +96,7 @@ public class DiverServiceImpl implements DiverService {
         diver.setPassword(passwordEncoder.encode(dto.getPassword()));
 
         Diver saved = diverRepository.save(diver);
-        logger.info("Created new diver with ID {}", saved.getId());
+        LOGGER.info("Created new diver with ID {}", saved.getId());
         return DiverMapper.toResponseDTO(saved, 0L);
     }
 
@@ -105,7 +109,7 @@ public class DiverServiceImpl implements DiverService {
      */
     @Override
     public DiverResponseDTO getDiverById(UUID id) {
-        logger.info("Fetching diver with ID {}", id);
+        LOGGER.info("Fetching diver with ID {}", id);
         Diver diver = diverRepository.findById(id)
                 .orElseThrow(() -> new DiverNotFoundException(id));
 
@@ -123,11 +127,11 @@ public class DiverServiceImpl implements DiverService {
     @Override
     @Transactional
     public void deleteDiver(UUID id) {
-        logger.info("Deleting diver with ID {}", id);
+        LOGGER.info("Deleting diver with ID {}", id);
         Diver diver = diverRepository.findById(id)
                 .orElseThrow(() -> new DiverNotFoundException(id));
         diverRepository.delete(diver);
-        logger.info("Diver with ID {} deleted successfully", id);
+        LOGGER.info("Diver with ID {} deleted successfully", id);
     }
 
     /**
@@ -141,7 +145,7 @@ public class DiverServiceImpl implements DiverService {
     @Override
     @Transactional
     public DiverResponseDTO updateDiver(UUID id, DiverUpdateRequestDTO dto) {
-        logger.info("Updating diver with ID {}", id);
+        LOGGER.info("Updating diver with ID {}", id);
 
         Diver diver = diverRepository.findById(id)
                 .orElseThrow(() -> new DiverNotFoundException(id));
@@ -149,7 +153,7 @@ public class DiverServiceImpl implements DiverService {
         DiverMapper.applyUpdates(diver, dto);
         long totalDives = diveLogRepository.countByDiverId(id);
 
-        logger.info("Diver with ID {} updated successfully", id);
+        LOGGER.info("Diver with ID {} updated successfully", id);
         return DiverMapper.toResponseDTO(diver, totalDives);
     }
 }

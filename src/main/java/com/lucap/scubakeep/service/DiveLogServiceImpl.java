@@ -27,12 +27,15 @@ import java.util.UUID;
 @Service
 public class DiveLogServiceImpl implements DiveLogService {
 
-    private static final Logger logger = LoggerFactory.getLogger(DiveLogServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DiveLogServiceImpl.class);
 
     private final DiveLogRepository diveLogRepository;
     private final DiverRepository diverRepository;
 
-    public DiveLogServiceImpl(DiveLogRepository diveLogRepository, DiverRepository diverRepository) {
+    public DiveLogServiceImpl(
+            DiveLogRepository diveLogRepository,
+            DiverRepository diverRepository
+    ) {
         this.diveLogRepository = diveLogRepository;
         this.diverRepository = diverRepository;
     }
@@ -45,7 +48,7 @@ public class DiveLogServiceImpl implements DiveLogService {
     @Override
     @Transactional(readOnly = true)
     public List<DiveLogResponseDTO> getAllDiveLogs() {
-        logger.info("Fetching all dive logs");
+        LOGGER.info("Fetching all dive logs");
         return diveLogRepository.findAll()
                 .stream()
                 .map(DiveLogMapper::toResponseDTO)
@@ -65,7 +68,7 @@ public class DiveLogServiceImpl implements DiveLogService {
 
         // Extract diver id from dto, fetch managed Diver from DB or throws DiverNotFoundException
         UUID diverId = dto.getDiverId();
-        logger.info("Creating dive log for diver ID {}", diverId);
+        LOGGER.info("Creating dive log for diver ID {}", diverId);
 
         Diver diver = diverRepository.findById(diverId)
                 .orElseThrow(() -> new DiverNotFoundException(diverId));
@@ -73,7 +76,7 @@ public class DiveLogServiceImpl implements DiveLogService {
         DiveLog diveLog = DiveLogMapper.toEntity(dto, diver);
         DiveLog saved = diveLogRepository.save(diveLog);
 
-        logger.info("Dive log created with ID {} for diver ID {}", saved.getId(), diverId);
+        LOGGER.info("Dive log created with ID {} for diver ID {}", saved.getId(), diverId);
         return DiveLogMapper.toResponseDTO(saved);
     }
 
@@ -87,7 +90,7 @@ public class DiveLogServiceImpl implements DiveLogService {
     @Override
     @Transactional(readOnly = true)
     public DiveLogResponseDTO getDiveLogById(Long id) {
-        logger.info("Fetching dive log with ID {}", id);
+        LOGGER.info("Fetching dive log with ID {}", id);
         DiveLog diveLog = diveLogRepository.findById(id)
                 .orElseThrow(() -> new DiveLogNotFoundException(id));
         return DiveLogMapper.toResponseDTO(diveLog);
@@ -102,7 +105,7 @@ public class DiveLogServiceImpl implements DiveLogService {
     @Override
     @Transactional
     public void deleteDiveLog(Long id) {
-        logger.info("Deleting dive log with ID {}", id);
+        LOGGER.info("Deleting dive log with ID {}", id);
 
         DiveLog diveLog = diveLogRepository.findById(id)
                 .orElseThrow(() -> new DiveLogNotFoundException(id));
@@ -111,7 +114,10 @@ public class DiveLogServiceImpl implements DiveLogService {
 
         diveLogRepository.delete(diveLog);
 
-        logger.info("Dive log with ID {} deleted; diver ID {} total dives decremented", id, diver.getId());
+        LOGGER.info("Dive log with ID {} deleted; diver ID {} total dives decremented",
+                id,
+                diver.getId()
+        );
     }
 
     /**
@@ -127,14 +133,14 @@ public class DiveLogServiceImpl implements DiveLogService {
     @Override
     @Transactional
     public DiveLogResponseDTO updateDiveLog(Long id, DiveLogUpdateRequestDTO dto) {
-        logger.info("Updating dive log with ID {}", id);
+        LOGGER.info("Updating dive log with ID {}", id);
 
         DiveLog diveLog = diveLogRepository.findById(id)
                 .orElseThrow(() -> new DiveLogNotFoundException(id));
 
         DiveLogMapper.applyUpdates(diveLog, dto);
 
-        logger.info("Dive log with ID {} updated successfully", id);
+        LOGGER.info("Dive log with ID {} updated successfully", id);
         return DiveLogMapper.toResponseDTO(diveLog);
     }
 }

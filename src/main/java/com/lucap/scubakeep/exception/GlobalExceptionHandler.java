@@ -18,7 +18,7 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
      * Handles cases where a requested resource (diver, dive log) is not found.
@@ -26,11 +26,11 @@ public class GlobalExceptionHandler {
      * Returns: 404 Not Found
      */
     @ExceptionHandler({
-            DiverNotFoundException.class,
-            DiveLogNotFoundException.class
+        DiverNotFoundException.class,
+        DiveLogNotFoundException.class
     })
     public ResponseEntity<Map<String, String>> handleNotFound(RuntimeException ex) {
-        logger.warn("Resource not found: {}", ex.getMessage());
+        LOGGER.warn("Resource not found: {}", ex.getMessage());
         Map<String, String> body = new HashMap<>();
         body.put("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
@@ -42,14 +42,16 @@ public class GlobalExceptionHandler {
      * Returns: 400 Bad Request with a map of field names to validation messages.
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidation(MethodArgumentNotValidException ex) {
+    public ResponseEntity<Map<String, String>> handleValidation(
+            MethodArgumentNotValidException ex
+    ) {
         Map<String, String> errors = new HashMap<>();
 
         ex.getBindingResult().getFieldErrors().forEach(error ->
                 errors.put(error.getField(), error.getDefaultMessage())
         );
 
-        logger.warn("Validation failed for {} fields: {}",
+        LOGGER.warn("Validation failed for {} fields: {}",
                 errors.size(), errors.keySet());
 
         return ResponseEntity.badRequest().body(errors);
@@ -61,12 +63,12 @@ public class GlobalExceptionHandler {
      * Returns: 409 Conflict
      */
     @ExceptionHandler({
-            EmailAlreadyExistsException.class,
-            UsernameAlreadyExistsException.class
+        EmailAlreadyExistsException.class,
+        UsernameAlreadyExistsException.class
     })
     public ResponseEntity<Map<String, String>> handleConflict(RuntimeException ex) {
 
-        logger.warn("Conflict for duplicate user attributes detected: {}", ex.getMessage());
+        LOGGER.warn("Conflict for duplicate user attributes detected: {}", ex.getMessage());
 
         Map<String, String> body = new HashMap<>();
         body.put("error", ex.getMessage());
