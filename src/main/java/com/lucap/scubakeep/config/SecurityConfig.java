@@ -3,6 +3,8 @@ package com.lucap.scubakeep.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -38,6 +40,9 @@ public class SecurityConfig {
                                 "/swagger-ui.html"
                         ).permitAll()
 
+                        // Registration and login (need to implement JWT)
+                        .requestMatchers("/auth/**").permitAll()
+
                         // Public GET endpoints
                         .requestMatchers(HttpMethod.GET, "/**").permitAll()
 
@@ -64,5 +69,18 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * Exposes Spring Security's AuthenticationManager for username/email + password authentication.
+     * Used by the login endpoint to authenticate credentials before issuing a JWT.
+     *
+     * @param config Spring's authentication configuration
+     * @return the AuthenticationManager instance
+     * @throws Exception if the AuthenticationManager cannot be created
+     */
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
 }
