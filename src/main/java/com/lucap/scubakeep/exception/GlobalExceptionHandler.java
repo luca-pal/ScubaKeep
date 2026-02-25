@@ -74,4 +74,24 @@ public class GlobalExceptionHandler {
         body.put("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
+
+    /**
+     * Handles inconsistent authentication state.
+     * <p>
+     * This should not occur in normal application flow.
+     * Returns 500 Internal Server Error.
+     */
+    @ExceptionHandler(AuthenticatedUserNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleAuthState(
+            AuthenticatedUserNotFoundException ex) {
+
+        LOGGER.error("Authentication state inconsistent: {}", ex.getMessage());
+
+        Map<String, String> body = new HashMap<>();
+        body.put("error", ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(body);
+    }
 }

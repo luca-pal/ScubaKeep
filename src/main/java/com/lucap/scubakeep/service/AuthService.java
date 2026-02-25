@@ -3,6 +3,7 @@ package com.lucap.scubakeep.service;
 import com.lucap.scubakeep.dto.TokenRequestDTO;
 import com.lucap.scubakeep.dto.TokenResponseDTO;
 import com.lucap.scubakeep.entity.Diver;
+import com.lucap.scubakeep.exception.AuthenticatedUserNotFoundException;
 import com.lucap.scubakeep.repository.DiverRepository;
 import com.lucap.scubakeep.security.JwtService;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -53,7 +54,8 @@ public class AuthService {
 
         Diver diver = diverRepository.findByUsername(username)
                 .orElseThrow(() ->
-                        new IllegalStateException("Authenticated user not found: " + username)
+                        new AuthenticatedUserNotFoundException("Authenticated user not found: "
+                                + username)
                 );
 
         String token = jwtService.generateToken(
