@@ -1,5 +1,7 @@
 package com.lucap.scubakeep.config;
 
+import com.lucap.scubakeep.security.JwtAuthenticationFilter;
+import com.lucap.scubakeep.security.JwtService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -8,9 +10,12 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -28,30 +33,21 @@ public class SecurityConfig {
      * </p>
      */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            JwtService jwtService,
+            UserDetailsService userDetailsService
+    ) throws Exception {
 
         http
                 .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        // Swagger
-                        .requestMatchers(
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html"
-                        ).permitAll()
-
-                        // Registration and login (need to implement JWT)
-                        .requestMatchers("/auth/**").permitAll()
-
-                        // Public GET endpoints
-                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
-
-                        // Block write operations for now
-                        .requestMatchers(HttpMethod.POST, "/**").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/**").authenticated()
-
-                        .anyRequest().authenticated()
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .authorizeHttpRequests(auth -> configureAuthorization(auth))
+                .addFilterBefore(
+                        new JwtAuthenticationFilter(jwtService, userDetailsService),
+                        UsernamePasswordAuthenticationFilter.class
                 )
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable());
@@ -84,5 +80,39 @@ public class SecurityConfig {
             AuthenticationConfiguration config
     ) throws Exception {
         return config.getAuthenticationManager();
+    }
+
+    /**
+     * Configures endpoint authorization rules.
+     *
+     * <p>
+     * Defines which routes are publicly accessible and which require
+     * authenticated access. Write operations (POST, PUT, DELETE)
+     * require authentication, while selected endpoints and all GET
+     * requests are publicly accessible.
+     * </p>
+     *
+     * @param auth the authorization registry used to configure request matchers
+     */
+    private void configureAuthorization(
+            org.springframework.security.config.annotation.web.configurers
+                    .AuthorizeHttpRequestsConfigurer<HttpSecurity>
+                    .AuthorizationManagerRequestMatcherRegistry auth) {
+
+        auth.requestMatchers(
+                "/v3/api-docs/**",
+                "/swagger-ui/**",
+                "/swagger-ui.html"
+        ).permitAll();
+
+        auth.requestMatchers("/auth/**").permitAll();
+
+        auth.requestMatchers(HttpMethod.GET, "/**").permitAll();
+
+        auth.requestMatchers(HttpMethod.POST, "/**").authenticated();
+        auth.requestMatchers(HttpMethod.PUT, "/**").authenticated();
+        auth.requestMatchers(HttpMethod.DELETE, "/**").authenticated();
+
+        auth.anyRequest().authenticated();
     }
 }
