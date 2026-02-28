@@ -5,6 +5,7 @@ import com.lucap.scubakeep.dto.DiveLogResponseDTO;
 import com.lucap.scubakeep.dto.DiveLogUpdateRequestDTO;
 import com.lucap.scubakeep.entity.DiveLog;
 import com.lucap.scubakeep.entity.Diver;
+import com.lucap.scubakeep.exception.AuthenticatedUserNotFoundException;
 import com.lucap.scubakeep.exception.DiveLogNotFoundException;
 import com.lucap.scubakeep.exception.DiverNotFoundException;
 import com.lucap.scubakeep.mapper.DiveLogMapper;
@@ -12,11 +13,11 @@ import com.lucap.scubakeep.repository.DiveLogRepository;
 import com.lucap.scubakeep.repository.DiverRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Service implementation for dive log management.
@@ -66,17 +67,19 @@ public class DiveLogServiceImpl implements DiveLogService {
     @Transactional
     public DiveLogResponseDTO createDiveLog(DiveLogRequestDTO dto) {
 
-        // Extract diver id from dto, fetch managed Diver from DB or throws DiverNotFoundException
-        UUID diverId = dto.getDiverId();
-        LOGGER.info("Creating dive log for diver ID {}", diverId);
+        // Used to extract diver id from dto
+        // now it extract it from authentication, fetch managed Diver from DB
+        // or throws AuthenticatedUserNotFound
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        LOGGER.info("Creating dive log for authenticated user '{}'", username);
 
-        Diver diver = diverRepository.findById(diverId)
-                .orElseThrow(() -> new DiverNotFoundException(diverId));
+        Diver diver = diverRepository.findByUsername(username)
+                .orElseThrow(() -> new AuthenticatedUserNotFoundException(username));
 
         DiveLog diveLog = DiveLogMapper.toEntity(dto, diver);
         DiveLog saved = diveLogRepository.save(diveLog);
 
-        LOGGER.info("Dive log created with ID {} for diver ID {}", saved.getId(), diverId);
+        LOGGER.info("Dive log created with ID {} for diver '{}'", saved.getId(), username);
         return DiveLogMapper.toResponseDTO(saved);
     }
 

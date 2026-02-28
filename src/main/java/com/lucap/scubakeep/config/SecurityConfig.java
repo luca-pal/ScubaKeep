@@ -99,20 +99,21 @@ public class SecurityConfig {
                     .AuthorizeHttpRequestsConfigurer<HttpSecurity>
                     .AuthorizationManagerRequestMatcherRegistry auth) {
 
+        // Public Swagger endpoints
         auth.requestMatchers(
                 "/v3/api-docs/**",
                 "/swagger-ui/**",
                 "/swagger-ui.html"
         ).permitAll();
 
+        // Explicitly allow authentication endpoints
+        auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
         auth.requestMatchers("/auth/**").permitAll();
 
+        // Allow anonymous read access
         auth.requestMatchers(HttpMethod.GET, "/**").permitAll();
 
-        auth.requestMatchers(HttpMethod.POST, "/**").authenticated();
-        auth.requestMatchers(HttpMethod.PUT, "/**").authenticated();
-        auth.requestMatchers(HttpMethod.DELETE, "/**").authenticated();
-
+        // Any other request must be authenticated
         auth.anyRequest().authenticated();
     }
 }

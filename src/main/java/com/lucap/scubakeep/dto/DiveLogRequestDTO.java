@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 /**
  * Data Transfer Object for creating dive log entries.
@@ -45,6 +44,7 @@ public class DiveLogRequestDTO {
     @Size(max = 500, message = "Notes must be at most 500 characters")
     private String notes;
 
-    @NotNull(message = "Diver ID is required")
-    private UUID diverId;
+    // Ownership (diver) is derived from the authenticated user (JWT),
+    // not provided by the client.
+    // private UUID diverId;
 }

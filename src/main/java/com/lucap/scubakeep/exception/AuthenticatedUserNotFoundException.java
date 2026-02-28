@@ -6,7 +6,7 @@ package com.lucap.scubakeep.exception;
  */
 public class AuthenticatedUserNotFoundException extends RuntimeException {
 
-    public AuthenticatedUserNotFoundException(String message) {
-        super(message);
+    public AuthenticatedUserNotFoundException(String username) {
+        super("Authenticated user not found in DB: " + username);
     }
 }
