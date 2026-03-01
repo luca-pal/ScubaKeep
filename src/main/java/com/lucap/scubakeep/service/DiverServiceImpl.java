@@ -47,6 +47,8 @@ public class DiverServiceImpl implements DiverService {
     public List<DiverResponseDTO> getAllDivers() {
         LOGGER.info("Fetching all divers");
 
+        authorizationService.assertAdmin();
+
         List<Diver> divers = diverRepository.findAll();
 
         // N+1 risk: This performs one COUNT query per diver.
@@ -106,6 +108,8 @@ public class DiverServiceImpl implements DiverService {
         LOGGER.info("Fetching diver with ID {}", id);
         Diver diver = diverRepository.findById(id)
                 .orElseThrow(() -> new DiverNotFoundException(id));
+
+        authorizationService.assertOwnerOrAdmin(diver.getUsername());
 
         long totalDives = diveLogRepository.countByDiverId(id);
 
