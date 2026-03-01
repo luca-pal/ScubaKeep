@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 
@@ -32,14 +34,30 @@ public class DiveLogController {
     }
 
     /**
-     * Retrieves all dive logs in the system.
+     * Retrieves dive logs with optional pagination and sorting.
      *
-     * @return a list of {@link DiveLogResponseDTO} representing all dive logs
+     * @param page the page index (0-based)
+     * @param size the number of items per page
+     * @param sortBy the field used for sorting
+     * @param sortDir the sorting direction (asc or desc)
+     * @return a list of {@link DiveLogResponseDTO} matching the requested criteria
      */
     @GetMapping
-    public ResponseEntity<List<DiveLogResponseDTO>> getAllDiveLogs() {
-        LOGGER.info("Received request to fetch all dive logs");
-        List<DiveLogResponseDTO> dtoList = diveLogService.getAllDiveLogs();
+    public ResponseEntity<List<DiveLogResponseDTO>> getAllDiveLogs(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir
+    ) {
+        LOGGER.info("Received request to fetch dive logs (page={}, size={}, sortBy={}, sortDir={})",
+                page, size, sortBy, sortDir);
+
+        Sort sort = "asc".equalsIgnoreCase(sortDir)
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        List<DiveLogResponseDTO> dtoList =
+                diveLogService.getDiveLogs(PageRequest.of(page, size, sort));
         LOGGER.info("Returning {} dive logs", dtoList.size());
         return ResponseEntity.ok(dtoList);
     }

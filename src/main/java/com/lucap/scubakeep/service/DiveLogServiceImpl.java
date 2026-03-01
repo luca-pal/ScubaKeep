@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import org.springframework.data.domain.Pageable;
 
 /**
  * Service implementation for dive log management.
@@ -38,15 +39,33 @@ public class DiveLogServiceImpl implements DiveLogService {
     private final AuthorizationService authorizationService;
 
     /**
-     * Retrieves all dive logs stored in the system.
+     * Retrieves all dive logs without pagination.
      *
-     * @return a list of all dive logs as {@link DiveLogResponseDTO}
+     * @return a list of {@link DiveLogResponseDTO} representing all dive logs
      */
     @Override
     @Transactional(readOnly = true)
     public List<DiveLogResponseDTO> getAllDiveLogs() {
-        LOGGER.info("Fetching all dive logs");
-        return diveLogRepository.findAll()
+
+        //return diveLogRepository.findAll()
+        //        .stream()
+        //        .map(DiveLogMapper::toResponseDTO)
+        //        .toList();
+
+        return getDiveLogs(Pageable.unpaged());
+    }
+
+    /**
+     * Retrieves dive logs using pagination and sorting.
+     *
+     * @param pageable the pagination and sorting configuration
+     * @return a list of {@link DiveLogResponseDTO} matching the requested page
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<DiveLogResponseDTO> getDiveLogs(Pageable pageable) {
+        LOGGER.info("Fetching dive logs (pageable={})", pageable);
+        return diveLogRepository.findAll(pageable)
                 .stream()
                 .map(DiveLogMapper::toResponseDTO)
                 .toList();
