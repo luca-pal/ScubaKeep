@@ -11,6 +11,8 @@ import com.lucap.scubakeep.exception.DiverNotFoundException;
 import com.lucap.scubakeep.mapper.DiveLogMapper;
 import com.lucap.scubakeep.repository.DiveLogRepository;
 import com.lucap.scubakeep.repository.DiverRepository;
+import com.lucap.scubakeep.security.AuthorizationService;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,6 +27,7 @@ import java.util.List;
  * Coordinates persistence of {@link DiveLog} entities and ensures
  * the associated {@link Diver}'s total dive count remains synchronized.
  */
+@RequiredArgsConstructor
 @Service
 public class DiveLogServiceImpl implements DiveLogService {
 
@@ -32,14 +35,7 @@ public class DiveLogServiceImpl implements DiveLogService {
 
     private final DiveLogRepository diveLogRepository;
     private final DiverRepository diverRepository;
-
-    public DiveLogServiceImpl(
-            DiveLogRepository diveLogRepository,
-            DiverRepository diverRepository
-    ) {
-        this.diveLogRepository = diveLogRepository;
-        this.diverRepository = diverRepository;
-    }
+    private final AuthorizationService authorizationService;
 
     /**
      * Retrieves all dive logs stored in the system.
@@ -115,6 +111,10 @@ public class DiveLogServiceImpl implements DiveLogService {
 
         Diver diver = diveLog.getDiver();
 
+        authorizationService.assertOwnerOrAdmin(
+                diver.getUsername()
+        );
+
         diveLogRepository.delete(diveLog);
 
         LOGGER.info("Dive log with ID {} deleted; diver ID {} total dives decremented",
@@ -140,6 +140,10 @@ public class DiveLogServiceImpl implements DiveLogService {
 
         DiveLog diveLog = diveLogRepository.findById(id)
                 .orElseThrow(() -> new DiveLogNotFoundException(id));
+
+        authorizationService.assertOwnerOrAdmin(
+                diveLog.getDiver().getUsername()
+        );
 
         DiveLogMapper.applyUpdates(diveLog, dto);
 

@@ -11,6 +11,8 @@ import com.lucap.scubakeep.exception.UsernameAlreadyExistsException;
 import com.lucap.scubakeep.mapper.DiverMapper;
 import com.lucap.scubakeep.repository.DiveLogRepository;
 import com.lucap.scubakeep.repository.DiverRepository;
+import com.lucap.scubakeep.security.AuthorizationService;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,6 +27,7 @@ import java.util.UUID;
  * <p>
  * Handles business logic for CRUD operations.
  */
+@RequiredArgsConstructor
 @Service
 public class DiverServiceImpl implements DiverService {
 
@@ -33,16 +36,7 @@ public class DiverServiceImpl implements DiverService {
     private final DiverRepository diverRepository;
     private final DiveLogRepository diveLogRepository;
     private final PasswordEncoder passwordEncoder;
-
-    public DiverServiceImpl(
-            DiverRepository diverRepository,
-            DiveLogRepository diveLogRepository,
-            PasswordEncoder passwordEncoder
-    ) {
-        this.diverRepository = diverRepository;
-        this.diveLogRepository = diveLogRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+    private final AuthorizationService authorizationService;
 
     /**
      * Retrieves all divers in the system.
@@ -128,8 +122,12 @@ public class DiverServiceImpl implements DiverService {
     @Transactional
     public void deleteDiver(UUID id) {
         LOGGER.info("Deleting diver with ID {}", id);
+
         Diver diver = diverRepository.findById(id)
                 .orElseThrow(() -> new DiverNotFoundException(id));
+
+        authorizationService.assertOwnerOrAdmin(diver.getUsername());
+
         diverRepository.delete(diver);
         LOGGER.info("Diver with ID {} deleted successfully", id);
     }
@@ -149,6 +147,8 @@ public class DiverServiceImpl implements DiverService {
 
         Diver diver = diverRepository.findById(id)
                 .orElseThrow(() -> new DiverNotFoundException(id));
+
+        authorizationService.assertOwnerOrAdmin(diver.getUsername());
 
         DiverMapper.applyUpdates(diver, dto);
         long totalDives = diveLogRepository.countByDiverId(id);

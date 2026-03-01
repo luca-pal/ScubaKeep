@@ -94,4 +94,23 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(body);
     }
+
+    /**
+     * Handles unauthorized resource access.
+     * <p>
+     * Thrown when an authenticated user attempts to modify or delete
+     * a resource they do not own and are not permitted to manage (admin).
+     * Returns 403 Forbidden.
+     */
+    @ExceptionHandler(UnauthorizedResourceAccessException.class)
+    public ResponseEntity<Map<String, String>> handleUnauthorizedResourceAccess(
+            UnauthorizedResourceAccessException ex) {
+
+        LOGGER.warn("Unauthorized access attempt: {}", ex.getMessage());
+
+        Map<String, String> body = new HashMap<>();
+        body.put("error", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
 }
