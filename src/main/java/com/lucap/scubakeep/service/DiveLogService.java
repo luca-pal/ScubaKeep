@@ -6,6 +6,7 @@ import com.lucap.scubakeep.dto.DiveLogUpdateRequestDTO;
 
 import org.springframework.data.domain.Pageable;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Service interface defining business operations for dive log management.
@@ -16,7 +17,7 @@ public interface DiveLogService {
 
     List<DiveLogResponseDTO> getAllDiveLogs();
 
-    List<DiveLogResponseDTO> getDiveLogs(Pageable pageable);
+    List<DiveLogResponseDTO> getDiveLogs(Pageable pageable, UUID diverId);
 
     DiveLogResponseDTO createDiveLog(DiveLogRequestDTO dto);
 

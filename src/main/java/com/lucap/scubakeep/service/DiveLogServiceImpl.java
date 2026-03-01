@@ -20,6 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
+
 import org.springframework.data.domain.Pageable;
 
 /**
@@ -52,20 +54,30 @@ public class DiveLogServiceImpl implements DiveLogService {
         //        .map(DiveLogMapper::toResponseDTO)
         //        .toList();
 
-        return getDiveLogs(Pageable.unpaged());
+        return getDiveLogs(Pageable.unpaged(), null);
     }
 
     /**
-     * Retrieves dive logs using pagination and sorting.
+     * Retrieves dive logs using pagination and sorting, optionally filtered by diver.
      *
      * @param pageable the pagination and sorting configuration
+     * @param diverId optional diver id to filter dive logs by owner
      * @return a list of {@link DiveLogResponseDTO} matching the requested page
      */
     @Override
     @Transactional(readOnly = true)
-    public List<DiveLogResponseDTO> getDiveLogs(Pageable pageable) {
-        LOGGER.info("Fetching dive logs (pageable={})", pageable);
-        return diveLogRepository.findAll(pageable)
+    public List<DiveLogResponseDTO> getDiveLogs(Pageable pageable, UUID diverId) {
+
+        if (diverId == null) {
+            LOGGER.info("Fetching dive logs (pageable={})", pageable);
+            return diveLogRepository.findAll(pageable)
+                    .stream()
+                    .map(DiveLogMapper::toResponseDTO)
+                    .toList();
+        }
+
+        LOGGER.info("Fetching dive logs for diverId={} (pageable={})", diverId, pageable);
+        return diveLogRepository.findByDiverId(diverId, pageable)
                 .stream()
                 .map(DiveLogMapper::toResponseDTO)
                 .toList();

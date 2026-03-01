@@ -14,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * REST controller for managing dive logs.
@@ -40,6 +41,7 @@ public class DiveLogController {
      * @param size the number of items per page
      * @param sortBy the field used for sorting
      * @param sortDir the sorting direction (asc or desc)
+     * @param diverId optional diver id to filter dive logs by owner
      * @return a list of {@link DiveLogResponseDTO} matching the requested criteria
      */
     @GetMapping
@@ -47,17 +49,21 @@ public class DiveLogController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String sortDir
+            @RequestParam(defaultValue = "desc") String sortDir,
+            @RequestParam(required = false) UUID diverId
     ) {
-        LOGGER.info("Received request to fetch dive logs (page={}, size={}, sortBy={}, sortDir={})",
-                page, size, sortBy, sortDir);
+        LOGGER.info(
+                "Received request to fetch dive logs " +
+                        "(page={}, size={}, sortBy={}, sortDir={}, diverId={})",
+                page, size, sortBy, sortDir, diverId
+        );
 
         Sort sort = "asc".equalsIgnoreCase(sortDir)
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
 
         List<DiveLogResponseDTO> dtoList =
-                diveLogService.getDiveLogs(PageRequest.of(page, size, sort));
+                diveLogService.getDiveLogs(PageRequest.of(page, size, sort), diverId);
         LOGGER.info("Returning {} dive logs", dtoList.size());
         return ResponseEntity.ok(dtoList);
     }
