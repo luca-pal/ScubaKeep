@@ -1,13 +1,11 @@
 package com.lucap.scubakeep.controller;
 
-import com.lucap.scubakeep.dto.DiverRequestDTO;
 import com.lucap.scubakeep.dto.DiverResponseDTO;
 import com.lucap.scubakeep.dto.DiverUpdateRequestDTO;
 import com.lucap.scubakeep.service.DiverService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,6 +32,7 @@ public class DiverController {
 
     /**
      * Retrieves all divers from the system.
+     * Just for ADMIN.
      *
      * @return a list of {@link DiverResponseDTO} objects
      */
@@ -45,19 +44,8 @@ public class DiverController {
         return ResponseEntity.ok(dtoList);
     }
 
-    /**
-     * Creates a new diver.
-     *
-     * @param dto the diver data
-     * @return the created diver as a {@link DiverResponseDTO}
-     */
-    @PostMapping
-    public ResponseEntity<DiverResponseDTO> createDiver(@RequestBody @Valid DiverRequestDTO dto) {
-        LOGGER.info("Received request to create a new diver");
-        DiverResponseDTO created = diverService.createDiver(dto);
-        LOGGER.info("Diver created with ID {}", created.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
-    }
+    // POST /api/divers removed since new users need to register through /auth/register
+    // public ResponseEntity<DiverResponseDTO> createDiver(@RequestBody @Valid DiverRequestDTO dto)
 
     /**
      * Retrieves a specific diver by ID.
