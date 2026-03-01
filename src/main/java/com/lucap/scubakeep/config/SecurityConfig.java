@@ -2,6 +2,7 @@ package com.lucap.scubakeep.config;
 
 import com.lucap.scubakeep.security.JwtAuthenticationFilter;
 import com.lucap.scubakeep.security.JwtService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -26,8 +27,8 @@ public class SecurityConfig {
      * Configures HTTP security rules for the application.
      *
      * <p>
-     * - Allows anonymous access to all GET endpoints (read-only access).
-     * - Blocks POST, PUT and DELETE endpoints (write operations).
+     * - Allows anonymous access to selected public GET endpoints (read-only access).
+     * - Requires authentication for write operations and protected resources.
      * - Allows access to Swagger UI without authentication.
      * - Disables default login form and CSRF for API usage.
      * </p>
@@ -45,6 +46,10 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> configureAuthorization(auth))
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) ->
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED))
+                )
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtService, userDetailsService),
                         UsernamePasswordAuthenticationFilter.class
@@ -88,7 +93,7 @@ public class SecurityConfig {
      * <p>
      * Defines which routes are publicly accessible and which require
      * authenticated access. Write operations (POST, PUT, DELETE)
-     * require authentication, while selected endpoints and all GET
+     * require authentication, while selected endpoints and DiveLogs GET
      * requests are publicly accessible.
      * </p>
      *
@@ -110,8 +115,8 @@ public class SecurityConfig {
         auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
         auth.requestMatchers("/auth/**").permitAll();
 
-        // Allow anonymous read access
-        auth.requestMatchers(HttpMethod.GET, "/**").permitAll();
+        // Allow anonymous read access only to public resources
+        auth.requestMatchers(HttpMethod.GET, "/api/divelogs/**").permitAll();
 
         // Any other request must be authenticated
         auth.anyRequest().authenticated();
