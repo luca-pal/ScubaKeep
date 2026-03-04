@@ -21,7 +21,7 @@ services:
     ports:
       - "8080:8080"
     networks:
-      - app
+      - scubakeep-net
     depends_on:
       - db
       - minio
@@ -38,7 +38,7 @@ services:
     volumes:
       - scubakeep_mariadb_data:/var/lib/mysql
     networks:
-      - app
+      - scubakeep-net
 
   minio:
     image: minio/minio:latest
@@ -52,11 +52,28 @@ services:
     volumes:
       - scubakeep_minio_data:/data
     networks:
-      - app
+      - scubakeep-net
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    environment:
+      BUCKET_HOST: ${BUCKET_HOST:-minio}
+      BUCKET_PORT: ${BUCKET_PORT:-9000}
+      BUCKET_ACCESS_KEY: ${BUCKET_ACCESS_KEY:-minioadmin}
+      BUCKET_ACCESS_SECRET: ${BUCKET_ACCESS_SECRET:-minioadminpw}
+      BUCKET_NAME: ${BUCKET_NAME:-files}
+    volumes:
+      - ./minio-init/init.sh:/init.sh:ro
+      - ./minio-init/files:/seed-files:ro
+    entrypoint: [ "/bin/sh", "/init.sh" ]
+    networks:
+      - scubakeep-net
 
 volumes:
   scubakeep_mariadb_data:
   scubakeep_minio_data:
 
 networks:
-  app:
+  scubakeep-net:
