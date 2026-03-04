@@ -48,6 +48,9 @@ public class DiveLog {
     @Column(name = "dive_notes", length = 500)
     private String notes;
 
+    @Column(name = "image_path", length = 120)
+    private String imagePath;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false, nullable = false)
     private Instant createdAt;

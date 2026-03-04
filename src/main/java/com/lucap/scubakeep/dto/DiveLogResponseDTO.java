@@ -35,6 +35,8 @@ public class DiveLogResponseDTO {
     private UUID diverId;
     private String diverUsername;
 
+    private String imageUrl;
+
     private Instant createdAt;
     private Instant updatedAt;
 }

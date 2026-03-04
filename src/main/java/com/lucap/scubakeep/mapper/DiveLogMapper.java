@@ -71,6 +71,9 @@ public class DiveLogMapper {
                 .diveBuddy(diveLog.getDiveBuddy())
                 .diverId(diver.getId())
                 .diverUsername(diver.getUsername())
+                .imageUrl(diveLog.getImagePath() == null
+                        ? null
+                        : "/api/divelogs/" + diveLog.getId() + "/image")
                 .createdAt(diveLog.getCreatedAt())
                 .updatedAt(diveLog.getUpdatedAt())
                 .build();
