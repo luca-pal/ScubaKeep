@@ -3,6 +3,7 @@ package com.lucap.scubakeep.service;
 import com.lucap.scubakeep.dto.DiverRequestDTO;
 import com.lucap.scubakeep.dto.DiverResponseDTO;
 import com.lucap.scubakeep.dto.DiverUpdateRequestDTO;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -23,4 +24,6 @@ public interface DiverService {
     void deleteDiver(UUID id);
 
     DiverResponseDTO updateDiver(UUID id, DiverUpdateRequestDTO dto);
+
+    DiverResponseDTO uploadProfilePicture(UUID id, MultipartFile file);
 }

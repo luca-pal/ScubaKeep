@@ -5,19 +5,19 @@ import com.lucap.scubakeep.dto.DiverResponseDTO;
 import com.lucap.scubakeep.dto.DiverUpdateRequestDTO;
 import com.lucap.scubakeep.entity.Diver;
 import com.lucap.scubakeep.entity.Role;
-import com.lucap.scubakeep.exception.DiverNotFoundException;
-import com.lucap.scubakeep.exception.EmailAlreadyExistsException;
-import com.lucap.scubakeep.exception.UsernameAlreadyExistsException;
+import com.lucap.scubakeep.exception.*;
 import com.lucap.scubakeep.mapper.DiverMapper;
 import com.lucap.scubakeep.repository.DiveLogRepository;
 import com.lucap.scubakeep.repository.DiverRepository;
 import com.lucap.scubakeep.security.AuthorizationService;
+import com.lucap.scubakeep.storage.MinioStorageService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -37,6 +37,7 @@ public class DiverServiceImpl implements DiverService {
     private final DiveLogRepository diveLogRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthorizationService authorizationService;
+    private final MinioStorageService minioStorageService;
 
     /**
      * Retrieves all divers in the system.
@@ -158,6 +159,52 @@ public class DiverServiceImpl implements DiverService {
         long totalDives = diveLogRepository.countByDiverId(id);
 
         LOGGER.info("Diver with ID {} updated successfully", id);
+        return DiverMapper.toResponseDTO(diver, totalDives);
+    }
+
+    /**
+     * Uploads a profile picture for a specific diver and stores it in MinIO.
+     * <p>
+     * Enforces authorization (only the owner or an admin can update the profile picture)
+     * and validates that the uploaded file is an image.
+     *
+     * @param id   the UUID of the diver
+     * @param file the multipart file containing the image
+     * @return the updated diver profile as {@link DiverResponseDTO}
+     * @throws DiverNotFoundException if the diver does not exist
+     * @throws InvalidFileTypeException if the uploaded file is not a valid image type
+     * @throws com.lucap.scubakeep.exception.StorageOperationException if the upload to MinIO fails
+     */
+    @Override
+    @Transactional
+    public DiverResponseDTO uploadProfilePicture(UUID id, MultipartFile file) {
+        LOGGER.info("Uploading profile picture for diver ID {}", id);
+
+        Diver diver = diverRepository.findById(id)
+                .orElseThrow(() -> new DiverNotFoundException(id));
+
+        authorizationService.assertOwnerOrAdmin(diver.getUsername());
+
+        // File validation
+        String cType = file.getContentType();
+        if (cType == null || !cType.startsWith("image/")) {
+            throw new InvalidFileTypeException(cType == null ? "unknown" : cType);
+        }
+
+        // Generate a unique path for MinIO
+        String originalFilename = file.getOriginalFilename();
+        String extension = originalFilename != null && originalFilename.contains(".")
+                ? originalFilename.substring(originalFilename.lastIndexOf(".")) : "";
+        String objectKey = "profiles/" + id + "/" + UUID.randomUUID() + extension;
+
+        try {
+            minioStorageService.upload(objectKey, file.getInputStream(), file.getSize(), cType);
+        } catch (java.io.IOException e) {
+            throw new StorageOperationException(objectKey);
+        }
+
+        diver.setProfilePicturePath(objectKey);
+        long totalDives = diveLogRepository.countByDiverId(id);
         return DiverMapper.toResponseDTO(diver, totalDives);
     }
 }

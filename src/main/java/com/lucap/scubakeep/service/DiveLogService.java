@@ -5,6 +5,8 @@ import com.lucap.scubakeep.dto.DiveLogResponseDTO;
 import com.lucap.scubakeep.dto.DiveLogUpdateRequestDTO;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -26,4 +28,6 @@ public interface DiveLogService {
     void deleteDiveLog(Long id);
 
     DiveLogResponseDTO updateDiveLog(Long id, DiveLogUpdateRequestDTO dto);
+
+    DiveLogResponseDTO uploadImage(Long id, MultipartFile file);
 }

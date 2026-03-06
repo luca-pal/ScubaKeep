@@ -5,13 +5,12 @@ import com.lucap.scubakeep.dto.DiveLogResponseDTO;
 import com.lucap.scubakeep.dto.DiveLogUpdateRequestDTO;
 import com.lucap.scubakeep.entity.DiveLog;
 import com.lucap.scubakeep.entity.Diver;
-import com.lucap.scubakeep.exception.AuthenticatedUserNotFoundException;
-import com.lucap.scubakeep.exception.DiveLogNotFoundException;
-import com.lucap.scubakeep.exception.DiverNotFoundException;
+import com.lucap.scubakeep.exception.*;
 import com.lucap.scubakeep.mapper.DiveLogMapper;
 import com.lucap.scubakeep.repository.DiveLogRepository;
 import com.lucap.scubakeep.repository.DiverRepository;
 import com.lucap.scubakeep.security.AuthorizationService;
+import com.lucap.scubakeep.storage.MinioStorageService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Service implementation for dive log management.
@@ -39,6 +39,7 @@ public class DiveLogServiceImpl implements DiveLogService {
     private final DiveLogRepository diveLogRepository;
     private final DiverRepository diverRepository;
     private final AuthorizationService authorizationService;
+    private final MinioStorageService minioStorageService;
 
     /**
      * Retrieves all dive logs without pagination.
@@ -179,6 +180,51 @@ public class DiveLogServiceImpl implements DiveLogService {
         DiveLogMapper.applyUpdates(diveLog, dto);
 
         LOGGER.info("Dive log with ID {} updated successfully", id);
+        return DiveLogMapper.toResponseDTO(diveLog);
+    }
+
+    /**
+     * Uploads an image for a specific dive log and stores it in MinIO.
+     * <p>
+     * Enforces authorization (only the owner or an admin can upload) and
+     * validates that the uploaded file is an image.
+     *
+     * @param id   the ID of the dive log
+     * @param file the multipart file containing the image
+     * @return the updated dive log as {@link DiveLogResponseDTO}
+     * @throws DiveLogNotFoundException if no dive log is found for the given ID
+     * @throws InvalidFileTypeException if the uploaded file is not a valid image type
+     * @throws StorageOperationException if the upload to MinIO fails
+     */
+    @Override
+    @Transactional
+    public DiveLogResponseDTO uploadImage(Long id, MultipartFile file) {
+        LOGGER.info("Uploading image for dive log ID {}", id);
+
+        DiveLog diveLog = diveLogRepository.findById(id)
+                .orElseThrow(() -> new DiveLogNotFoundException(id));
+
+        authorizationService.assertOwnerOrAdmin(diveLog.getDiver().getUsername());
+
+        // File validation
+        String cType = file.getContentType();
+        if (cType == null || !cType.startsWith("image/")) {
+            throw new InvalidFileTypeException(cType == null ? "unknown" : cType);
+        }
+
+        // Generate a unique path for MinIO
+        String originalFilename = file.getOriginalFilename();
+        String extension = originalFilename != null && originalFilename.contains(".")
+                ? originalFilename.substring(originalFilename.lastIndexOf(".")) : "";
+        String objectKey = "divelogs/" + id + "/" + UUID.randomUUID() + extension;
+
+        try {
+            minioStorageService.upload(objectKey, file.getInputStream(), file.getSize(), cType);
+        } catch (java.io.IOException e) {
+            throw new StorageOperationException(objectKey);
+        }
+
+        diveLog.setImagePath(objectKey);
         return DiveLogMapper.toResponseDTO(diveLog);
     }
 }
