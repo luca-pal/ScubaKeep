@@ -30,11 +30,19 @@ public class DiverMapper {
      * @return a new Diver entity
      */
     public static Diver toEntity(DiverRequestDTO dto) {
+
+        String profilePic = dto.getProfilePicturePath();
+
+        if (profilePic == null || profilePic.isBlank()) {
+            // Ehi, that's me!
+            profilePic = "https://github.com/luca-pal.png";
+        }
+
         return Diver.builder()
                 .username(dto.getUsername())
                 .email(dto.getEmail())
                 .countryCode(normalizeCountryCode(dto.getCountryCode()))
-                .profilePicturePath(dto.getProfilePicturePath())
+                .profilePicturePath(profilePic)
                 .firstName(dto.getFirstName())
                 .lastName(dto.getLastName())
                 .highestCertification(dto.getHighestCertification())
