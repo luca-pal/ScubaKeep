@@ -113,4 +113,42 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
+
+    /**
+     * Handles object storage failures (e.g. MinIO upload/download issues).
+     * <p>
+     * Returns: 500 Internal Server Error.
+     */
+    @ExceptionHandler(StorageOperationException.class)
+    public ResponseEntity<Map<String, String>> handleStorageOperationException(
+            StorageOperationException ex
+    ) {
+        LOGGER.error("Object storage operation failed: {}", ex.getMessage());
+
+        Map<String, String> body = new HashMap<>();
+        body.put("error", ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(body);
+    }
+
+    /**
+     * Handles invalid file type errors during file upload.
+     * <p>
+     * Returns: 400 Bad Request
+     */
+    @ExceptionHandler(InvalidFileTypeException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidFileType(
+            InvalidFileTypeException ex
+    ) {
+        LOGGER.warn("Invalid file upload attempt: {}", ex.getMessage());
+
+        Map<String, String> body = new HashMap<>();
+        body.put("error", ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(body);
+    }
 }
