@@ -207,4 +207,26 @@ public class DiverServiceImpl implements DiverService {
         long totalDives = diveLogRepository.countByDiverId(id);
         return DiverMapper.toResponseDTO(diver, totalDives);
     }
+
+    /**
+     * Retrieves the raw bytes of the diver's profile picture from MinIO.
+     *
+     * @param id the UUID of the diver
+     * @return the image bytes, or null if no local image exists
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] getProfilePictureBytes(UUID id) {
+        Diver diver = diverRepository.findById(id)
+                .orElseThrow(() -> new DiverNotFoundException(id));
+
+        String path = diver.getProfilePicturePath();
+
+        // If path is null or if it's an external URL
+        if (path == null || path.startsWith("http")) {
+            return null;
+        }
+
+        return minioStorageService.download(path);
+    }
 }

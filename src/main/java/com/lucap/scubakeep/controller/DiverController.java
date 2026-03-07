@@ -109,4 +109,21 @@ public class DiverController {
         LOGGER.info("Profile picture uploaded successfully for diver ID {}", id);
         return ResponseEntity.ok(updated);
     }
+
+    /**
+     * Retrieves the profile picture of a specific diver.
+     *
+     * @param id the diver ID
+     * @return the image file as a byte array
+     */
+    @GetMapping(value = "/{id}/image", produces = MediaType.IMAGE_JPEG_VALUE)
+    public ResponseEntity<byte[]> getProfilePicture(@PathVariable UUID id) {
+        LOGGER.info("Received request to download profile picture for diver ID {}", id);
+        byte[] imageBytes = diverService.getProfilePictureBytes(id);
+
+        if (imageBytes == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(imageBytes);
+    }
 }

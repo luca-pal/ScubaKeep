@@ -146,4 +146,21 @@ public class DiveLogController {
         LOGGER.info("Image uploaded successfully for dive log ID {}", id);
         return ResponseEntity.ok(updated);
     }
+
+    /**
+     * Retrieves the image associated with a dive log.
+     *
+     * @param id the dive log ID
+     * @return the image file as a byte array
+     */
+    @GetMapping(value = "/{id}/image", produces = MediaType.IMAGE_JPEG_VALUE)
+    public ResponseEntity<byte[]> getDiveLogImage(@PathVariable Long id) {
+        LOGGER.info("Received request to download image for dive log ID {}", id);
+        byte[] imageBytes = diveLogService.getDiveLogImageBytes(id);
+
+        if (imageBytes == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(imageBytes);
+    }
 }

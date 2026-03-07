@@ -117,6 +117,7 @@ public class SecurityConfig {
 
         // Allow anonymous read access only to public resources
         auth.requestMatchers(HttpMethod.GET, "/api/divelogs/**").permitAll();
+        auth.requestMatchers(HttpMethod.GET, "/api/divers/*/image").permitAll();
 
         // Any other request must be authenticated
         auth.anyRequest().authenticated();

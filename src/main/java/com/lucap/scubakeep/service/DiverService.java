@@ -26,4 +26,6 @@ public interface DiverService {
     DiverResponseDTO updateDiver(UUID id, DiverUpdateRequestDTO dto);
 
     DiverResponseDTO uploadProfilePicture(UUID id, MultipartFile file);
+
+    byte[] getProfilePictureBytes(UUID id);
 }

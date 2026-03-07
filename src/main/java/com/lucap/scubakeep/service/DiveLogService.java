@@ -30,4 +30,6 @@ public interface DiveLogService {
     DiveLogResponseDTO updateDiveLog(Long id, DiveLogUpdateRequestDTO dto);
 
     DiveLogResponseDTO uploadImage(Long id, MultipartFile file);
+
+    byte[] getDiveLogImageBytes(Long id);
 }

@@ -227,4 +227,23 @@ public class DiveLogServiceImpl implements DiveLogService {
         diveLog.setImagePath(objectKey);
         return DiveLogMapper.toResponseDTO(diveLog);
     }
+
+    /**
+     * Retrieves the raw bytes of the dive log image from MinIO.
+     *
+     * @param id the ID of the dive log
+     * @return the image bytes, or null if no local image exists
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] getDiveLogImageBytes(Long id) {
+        DiveLog diveLog = diveLogRepository.findById(id)
+                .orElseThrow(() -> new DiveLogNotFoundException(id));
+
+        if (diveLog.getImagePath() == null) {
+            return null;
+        }
+
+        return minioStorageService.download(diveLog.getImagePath());
+    }
 }
