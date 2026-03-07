@@ -6,8 +6,10 @@ import com.lucap.scubakeep.service.DiverService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -88,6 +90,23 @@ public class DiverController {
         LOGGER.info("Received request to update diver with ID {}", id);
         DiverResponseDTO updated = diverService.updateDiver(id, dto);
         LOGGER.info("Diver with ID {} updated successfully", id);
+        return ResponseEntity.ok(updated);
+    }
+
+    /**
+     * Uploads a profile picture for a specific diver.
+     *
+     * @param id the diver ID
+     * @param file the image file to upload
+     * @return the updated diver as a {@link DiverResponseDTO}
+     */
+    @PostMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<DiverResponseDTO> uploadProfilePicture(
+            @PathVariable UUID id,
+            @RequestParam("file") MultipartFile file) {
+        LOGGER.info("Received request to upload profile picture for diver ID {}", id);
+        DiverResponseDTO updated = diverService.uploadProfilePicture(id, file);
+        LOGGER.info("Profile picture uploaded successfully for diver ID {}", id);
         return ResponseEntity.ok(updated);
     }
 }

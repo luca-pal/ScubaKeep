@@ -8,10 +8,12 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -125,6 +127,23 @@ public class DiveLogController {
         LOGGER.info("Received request to update dive log with ID {}", id);
         DiveLogResponseDTO updated = diveLogService.updateDiveLog(id, dto);
         LOGGER.info("Dive log with ID {} updated successfully", id);
+        return ResponseEntity.ok(updated);
+    }
+
+    /**
+     * Uploads an image for a specific dive log.
+     *
+     * @param id the ID of the dive log
+     * @param file the image file to upload
+     * @return the updated dive log as a {@link DiveLogResponseDTO}
+     */
+    @PostMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<DiveLogResponseDTO> uploadDiveLogImage(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        LOGGER.info("Received request to upload image for dive log ID {}", id);
+        DiveLogResponseDTO updated = diveLogService.uploadImage(id, file);
+        LOGGER.info("Image uploaded successfully for dive log ID {}", id);
         return ResponseEntity.ok(updated);
     }
 }
