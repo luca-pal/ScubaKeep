@@ -78,11 +78,14 @@ class DiverServiceImplTest {
         updateRequestDTO.setHighestCertification(Certification.ADVANCED);
         updateRequestDTO.setSpecialties(Set.of("Wreck Diver", "Deep Diver"));
 
-        diver = new Diver();
-        diver.setId(UUID.randomUUID());
-        diver.setUsername("testuser");
-        diver.setEmail("test@test.com");
-        diver.setRole(Role.USER);
+        diver = Diver.builder()
+                .id(UUID.randomUUID())
+                .username("testuser")
+                .email("test@test.com")
+                .role(Role.USER)
+                .firstName("Test")
+                .lastName("User")
+                .build();
     }
 
     /**
