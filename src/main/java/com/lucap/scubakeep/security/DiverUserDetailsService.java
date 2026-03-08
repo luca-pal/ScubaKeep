@@ -2,6 +2,7 @@ package com.lucap.scubakeep.security;
 
 import com.lucap.scubakeep.entity.Diver;
 import com.lucap.scubakeep.repository.DiverRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
@@ -12,13 +13,10 @@ import java.util.List;
  * Loads Divers from the database for Spring Security authentication.
  */
 @Service
+@RequiredArgsConstructor
 public class DiverUserDetailsService implements UserDetailsService {
 
     private final DiverRepository diverRepository;
-
-    public DiverUserDetailsService(DiverRepository diverRepository) {
-        this.diverRepository = diverRepository;
-    }
 
     /**
      * Loads a user by username (or email) for authentication.
