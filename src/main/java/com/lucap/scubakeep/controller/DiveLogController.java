@@ -5,6 +5,7 @@ import com.lucap.scubakeep.dto.DiveLogResponseDTO;
 import com.lucap.scubakeep.dto.DiveLogUpdateRequestDTO;
 import com.lucap.scubakeep.service.DiveLogService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,7 @@ import java.util.UUID;
  * Provides endpoints for creating, retrieving, updating, and deleting dive logs.
  * All data is transferred using DTOs for request and response payloads.
  */
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/divelogs")
 public class DiveLogController {
@@ -31,10 +33,6 @@ public class DiveLogController {
     private static final Logger LOGGER = LoggerFactory.getLogger(DiveLogController.class);
 
     private final DiveLogService diveLogService;
-
-    public DiveLogController(DiveLogService diveLogService) {
-        this.diveLogService = diveLogService;
-    }
 
     /**
      * Retrieves dive logs with optional pagination and sorting.
