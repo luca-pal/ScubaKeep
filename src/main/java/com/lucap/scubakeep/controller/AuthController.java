@@ -7,6 +7,7 @@ import com.lucap.scubakeep.dto.TokenResponseDTO;
 import com.lucap.scubakeep.service.AuthService;
 import com.lucap.scubakeep.service.DiverService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <p>Contains public endpoints that are required to obtain access to the system.</p>
  */
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -29,11 +31,6 @@ public class AuthController {
 
     private final DiverService diverService;
     private final AuthService authService;
-
-    public AuthController(DiverService diverService, AuthService authService) {
-        this.diverService = diverService;
-        this.authService = authService;
-    }
 
     /**
      * Registers a new user/diver account.
