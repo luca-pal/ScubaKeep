@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lucap.scubakeep.dto.DiveLogRequestDTO;
 import com.lucap.scubakeep.dto.DiveLogResponseDTO;
 import com.lucap.scubakeep.dto.DiveLogUpdateRequestDTO;
+import com.lucap.scubakeep.exception.DiveLogNotFoundException;
 import com.lucap.scubakeep.service.DiveLogService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -135,6 +136,25 @@ class DiveLogControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(logId))
                 .andExpect(jsonPath("$.location").value("Blue Hole"));
+    }
+
+    /**
+     * Tests GET /api/divelogs/{id} returns 404 Not Found when the log does not exist.
+     * <p>
+     * Verifies that the GlobalExceptionHandler #handleNotFound correctly
+     * intercepts the {@link DiveLogNotFoundException} and returns the formatted error message.
+     */
+    @Test
+    void getDiveLogById_ShouldReturnNotFound_WhenLogDoesNotExist() throws Exception {
+        // Arrange
+        Long nonExistentId = 99L;
+        when(diveLogService.getDiveLogById(nonExistentId))
+                .thenThrow(new DiveLogNotFoundException(nonExistentId));
+
+        // Act & Assert
+        mockMvc.perform(get("/api/divelogs/{id}", nonExistentId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Dive log with id 99 not found"));
     }
 
     /**

@@ -91,6 +91,26 @@ class AuthControllerTest {
     }
 
     /**
+     * Tests POST /auth/register returns 400 Bad Request when multiple fields fail validation.
+     * <p>
+     * Exercises the GlobalExceptionHandler #handleValidation logic by verifying
+     * that all constraint violations (e.g., @NotBlank, @Email) are collected and
+     * returned in the response map.
+     */
+    @Test
+    void register_ShouldReturnBadRequest_WhenInputsAreInvalid() throws Exception {
+        diverRequestDTO.setUsername("");        // Invalid: @NotBlank
+        diverRequestDTO.setEmail("invalid-mail"); // Invalid: @Email
+
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(diverRequestDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.username").exists())
+                .andExpect(jsonPath("$.email").exists());
+    }
+
+    /**
      * Tests POST /auth/token returns 200 OK and a JWT token.
      */
     @Test
