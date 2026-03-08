@@ -2,10 +2,13 @@ package com.lucap.scubakeep.service;
 
 import com.lucap.scubakeep.dto.DiveLogRequestDTO;
 import com.lucap.scubakeep.dto.DiveLogResponseDTO;
+import com.lucap.scubakeep.dto.DiveLogUpdateRequestDTO;
 import com.lucap.scubakeep.entity.DiveLog;
 import com.lucap.scubakeep.entity.Diver;
 import com.lucap.scubakeep.exception.AuthenticatedUserNotFoundException;
 import com.lucap.scubakeep.exception.DiveLogNotFoundException;
+import com.lucap.scubakeep.exception.InvalidFileTypeException;
+import com.lucap.scubakeep.exception.StorageOperationException;
 import com.lucap.scubakeep.repository.DiveLogRepository;
 import com.lucap.scubakeep.repository.DiverRepository;
 import com.lucap.scubakeep.security.AuthorizationService;
@@ -22,7 +25,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -54,6 +59,7 @@ class DiveLogServiceImplTest {
     private Diver diver;
     private DiveLog diveLog;
     private DiveLogRequestDTO requestDTO;
+    private DiveLogUpdateRequestDTO updateRequestDTO;
 
     /**
      * Initializes mock data objects before each test execution to ensure test isolation.
@@ -85,6 +91,15 @@ class DiveLogServiceImplTest {
         requestDTO.setDuration(45);
         requestDTO.setDiveBuddy("Dave the Diver");
         requestDTO.setNotes("Saw a tuna, now I crave sushi.");
+
+        updateRequestDTO = new DiveLogUpdateRequestDTO();
+        updateRequestDTO.setDiveDate(LocalDate.now());
+        updateRequestDTO.setLocation("Dominican Republic");
+        updateRequestDTO.setDiveSite("Stingray City");
+        updateRequestDTO.setMaxDepth(25.0);
+        updateRequestDTO.setDuration(55);
+        updateRequestDTO.setDiveBuddy("Scuba Sam");
+        updateRequestDTO.setNotes("Updated notes.");
     }
 
     /**
@@ -267,5 +282,146 @@ class DiveLogServiceImplTest {
                 diveLogService.deleteDiveLog(logId));
 
         verify(diveLogRepository, never()).delete(any());
+    }
+
+    /**
+     * Tests that a dive log is successfully updated when it exists
+     * and the user is authorized.
+     */
+    @Test
+    void updateDiveLog_Success() {
+        // Arrange
+        Long logId = 1L;
+        when(diveLogRepository.findById(logId)).thenReturn(Optional.of(diveLog));
+        doNothing().when(authorizationService).assertOwnerOrAdmin(diver.getUsername());
+
+        // Act
+        DiveLogResponseDTO result = diveLogService.updateDiveLog(logId, updateRequestDTO);
+
+        // Assert
+        assertNotNull(result);
+        verify(authorizationService, times(1)).assertOwnerOrAdmin(diver.getUsername());
+        assertEquals("Dominican Republic", diveLog.getLocation());
+        assertEquals("Stingray City", diveLog.getDiveSite());
+        assertEquals(25.0, diveLog.getMaxDepth());
+    }
+
+    /**
+     * Tests that trying to update a non-existent dive log
+     * throws a {@link DiveLogNotFoundException}.
+     */
+    @Test
+    void updateDiveLog_ThrowsNotFound() {
+        // Arrange
+        Long logId = 999L;
+        when(diveLogRepository.findById(logId)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(DiveLogNotFoundException.class, () ->
+                diveLogService.updateDiveLog(logId, updateRequestDTO));
+        verify(authorizationService, never()).assertOwnerOrAdmin(anyString());
+    }
+
+    /**
+     * Tests that a dive log image is successfully uploaded to storage
+     * when the file is valid and the user is authorized.
+     */
+    @Test
+    void uploadImage_Success() throws Exception {
+        // Arrange
+        MultipartFile mockFile = mock(MultipartFile.class);
+        InputStream mockStream = mock(InputStream.class);
+        when(diveLogRepository.findById(1L)).thenReturn(Optional.of(diveLog));
+        doNothing().when(authorizationService).assertOwnerOrAdmin(diver.getUsername());
+
+        // Setup mock file behavior
+        when(mockFile.getContentType()).thenReturn("image/jpeg");
+        when(mockFile.getSize()).thenReturn(1024L);
+        when(mockFile.getInputStream()).thenReturn(mockStream);
+
+        // Act
+        DiveLogResponseDTO result = diveLogService.uploadImage(1L, mockFile);
+
+        // Assert
+        assertNotNull(diveLog.getImagePath());
+        assertTrue(diveLog.getImagePath().startsWith("divelogs/1/"));
+        verify(minioStorageService, times(1)).upload(anyString(), eq(mockStream), eq(1024L), eq("image/jpeg"));
+    }
+
+    /**
+     * Tests that an {@link InvalidFileTypeException} is thrown when the
+     * uploaded file is not an image (e.g., application/pdf).
+     */
+    @Test
+    void uploadImage_ThrowsInvalidFileTypeException() {
+        // Arrange
+        MultipartFile mockFile = mock(MultipartFile.class);
+        when(diveLogRepository.findById(1L)).thenReturn(Optional.of(diveLog));
+
+        // Trigger validation failure
+        when(mockFile.getContentType()).thenReturn("application/pdf");
+
+        // Act & Assert
+        assertThrows(InvalidFileTypeException.class, () ->
+                diveLogService.uploadImage(1L, mockFile));
+
+        verify(minioStorageService, never()).upload(anyString(), any(), anyLong(), anyString());
+    }
+
+    /**
+     * Tests that a {@link StorageOperationException} is thrown when an
+     * {@link java.io.IOException} occurs during the file streaming process.
+     */
+    @Test
+    void uploadImage_ThrowsStorageOperationException() throws Exception {
+        // Arrange
+        MultipartFile mockFile = mock(MultipartFile.class);
+        when(diveLogRepository.findById(1L)).thenReturn(Optional.of(diveLog));
+        when(mockFile.getContentType()).thenReturn("image/png");
+
+        // Force the IO failure
+        when(mockFile.getInputStream()).thenThrow(new java.io.IOException("Disk full"));
+
+        // Act & Assert
+        assertThrows(StorageOperationException.class, () ->
+                diveLogService.uploadImage(1L, mockFile));
+    }
+
+    /**
+     * Tests that the image bytes are successfully retrieved from storage
+     * when the dive log has an associated image path.
+     */
+    @Test
+    void getDiveLogImageBytes_Success() {
+        // Arrange
+        byte[] expectedBytes = "fake-image-content".getBytes();
+        diveLog.setImagePath("divelogs/1/photo.jpg");
+
+        when(diveLogRepository.findById(1L)).thenReturn(Optional.of(diveLog));
+        when(minioStorageService.download("divelogs/1/photo.jpg")).thenReturn(expectedBytes);
+
+        // Act
+        byte[] result = diveLogService.getDiveLogImageBytes(1L);
+
+        // Assert
+        assertArrayEquals(expectedBytes, result);
+        verify(minioStorageService, times(1)).download(anyString());
+    }
+
+    /**
+     * Tests that null is returned when attempting to retrieve image bytes
+     * for a dive log that has no image path set.
+     */
+    @Test
+    void getDiveLogImageBytes_ReturnsNullWhenNoPath() {
+        // Arrange
+        when(diveLogRepository.findById(1L)).thenReturn(Optional.of(diveLog));
+
+        // Act
+        byte[] result = diveLogService.getDiveLogImageBytes(1L);
+
+        // Assert
+        assertNull(result);
+        verify(minioStorageService, never()).download(anyString());
     }
 }
