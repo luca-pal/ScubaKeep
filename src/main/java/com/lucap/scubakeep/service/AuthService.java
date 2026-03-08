@@ -6,6 +6,7 @@ import com.lucap.scubakeep.entity.Diver;
 import com.lucap.scubakeep.exception.AuthenticatedUserNotFoundException;
 import com.lucap.scubakeep.repository.DiverRepository;
 import com.lucap.scubakeep.security.JwtService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -19,22 +20,13 @@ import org.springframework.stereotype.Service;
  * JWT generation will be added in the next step.
  * </p>
  */
+@RequiredArgsConstructor
 @Service
 public class AuthService {
 
     private final AuthenticationManager authenticationManager;
     private final DiverRepository diverRepository;
     private final JwtService jwtService;
-
-    public AuthService(
-            AuthenticationManager authenticationManager,
-            DiverRepository diverRepository,
-            JwtService jwtService
-    ) {
-        this.authenticationManager = authenticationManager;
-        this.diverRepository = diverRepository;
-        this.jwtService = jwtService;
-    }
 
     /**
      * Authenticates a user using username or email and password,
