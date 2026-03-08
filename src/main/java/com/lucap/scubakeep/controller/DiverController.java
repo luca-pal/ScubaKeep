@@ -4,6 +4,7 @@ import com.lucap.scubakeep.dto.DiverResponseDTO;
 import com.lucap.scubakeep.dto.DiverUpdateRequestDTO;
 import com.lucap.scubakeep.service.DiverService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -20,6 +21,7 @@ import java.util.UUID;
  * Provides endpoints to create, retrieve, update, and delete diver records.
  * Uses DTOs for request validation and response formatting.
  */
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/divers")
 public class DiverController {
@@ -27,10 +29,6 @@ public class DiverController {
     private static final Logger LOGGER = LoggerFactory.getLogger(DiverController.class);
 
     private final DiverService diverService;
-
-    public DiverController(DiverService diverService) {
-        this.diverService = diverService;
-    }
 
     /**
      * Retrieves all divers from the system.
