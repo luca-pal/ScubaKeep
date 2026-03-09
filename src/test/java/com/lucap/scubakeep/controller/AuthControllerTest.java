@@ -7,6 +7,8 @@ import com.lucap.scubakeep.dto.TokenRequestDTO;
 import com.lucap.scubakeep.dto.TokenResponseDTO;
 import com.lucap.scubakeep.entity.Certification;
 import com.lucap.scubakeep.entity.Role;
+import com.lucap.scubakeep.exception.EmailAlreadyExistsException;
+import com.lucap.scubakeep.exception.UsernameAlreadyExistsException;
 import com.lucap.scubakeep.service.AuthService;
 import com.lucap.scubakeep.service.DiverService;
 import org.junit.jupiter.api.BeforeEach;
@@ -108,6 +110,52 @@ class AuthControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.username").exists())
                 .andExpect(jsonPath("$.email").exists());
+    }
+
+    /**
+     * Tests POST /auth/register returns 409 Conflict when the email is already registered.
+     * <p>
+     * Verifies that GlobalExceptionHandler #handleConflict correctly catches
+     * {@link EmailAlreadyExistsException}.
+     */
+    @Test
+    void register_ShouldReturnConflict_WhenEmailExists() throws Exception {
+        // Arrange
+        String email = "duplicate@dive.com";
+        diverRequestDTO.setEmail(email);
+
+        when(diverService.createDiver(any()))
+                .thenThrow(new EmailAlreadyExistsException(email));
+
+        // Act & Assert
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(diverRequestDTO)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Email already in use: " + email));
+    }
+
+    /**
+     * Tests POST /auth/register returns 409 Conflict when the username is already taken.
+     * <p>
+     * Verifies that GlobalExceptionHandler #handleConflict correctly catches
+     * {@link UsernameAlreadyExistsException}.
+     */
+    @Test
+    void register_ShouldReturnConflict_WhenUsernameExists() throws Exception {
+        // Arrange
+        String username = "existingDiver";
+        diverRequestDTO.setUsername(username);
+
+        when(diverService.createDiver(any()))
+                .thenThrow(new UsernameAlreadyExistsException(username));
+
+        // Act & Assert
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(diverRequestDTO)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Username already in use: " + username));
     }
 
     /**

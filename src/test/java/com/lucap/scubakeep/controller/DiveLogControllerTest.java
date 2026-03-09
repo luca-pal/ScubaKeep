@@ -5,6 +5,7 @@ import com.lucap.scubakeep.dto.DiveLogRequestDTO;
 import com.lucap.scubakeep.dto.DiveLogResponseDTO;
 import com.lucap.scubakeep.dto.DiveLogUpdateRequestDTO;
 import com.lucap.scubakeep.exception.DiveLogNotFoundException;
+import com.lucap.scubakeep.exception.UnauthorizedResourceAccessException;
 import com.lucap.scubakeep.service.DiveLogService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,8 +24,7 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -170,6 +170,26 @@ class DiveLogControllerTest {
         mockMvc.perform(delete("/api/divelogs/{id}", logId))
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(""));
+    }
+
+    /**
+     * Tests DELETE /api/divelogs/{id} returns 403 Forbidden when the user is not the owner.
+     * <p>
+     * Verifies that GlobalExceptionHandler #handleUnauthorizedResourceAccess
+     * correctly catches the exception and returns a 403 status.
+     */
+    @Test
+    void deleteDiveLog_ShouldReturnForbidden_WhenUserIsNotOwner() throws Exception {
+        // Arrange
+        Long logId = 1L;
+        doThrow(new UnauthorizedResourceAccessException())
+                .when(diveLogService).deleteDiveLog(logId);
+
+        // Act & Assert
+        mockMvc.perform(delete("/api/divelogs/{id}", logId))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error")
+                .value("User not allowed to access this resource."));
     }
 
     /**
