@@ -81,7 +81,8 @@ public class GlobalExceptionHandler {
      * Returns HTTP 401 Unauthorized.
      */
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<Map<String, String>> handleAuthenticationException(AuthenticationException ex) {
+    public ResponseEntity<Map<String, String>> handleAuthenticationException(
+            AuthenticationException ex) {
 
         LOGGER.warn("Authentication failed: {}", ex.getMessage());
 
