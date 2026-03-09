@@ -1,136 +1,222 @@
-# 🌊 ScubaKeep – Spring Boot Dive Logbook
+# 🤿 ScubaKeep – Dive Log REST API
 
-ScubaKeep is a Spring Boot backend application that helps scuba divers log, manage, and track their dives -from local reef dives to adventures across the seven seas- through a clean and intuitive REST API. It features a layered architecture with full service-level testing, validation, and meaningful logging.
-
-This project was developed independently as a portfolio piece to build practical proficiency with Spring Boot, JPA, validation, RESTful design, and unit testing in a real-world backend system.
+A secure RESTful backend for managing scuba diving logs, featuring JWT authentication, role-based access control, and object storage for dive images and users' profile pictures.
 
 ---
 
-## 🐠 Features
+## 🐡 Project Overview
+
+ScubaKeep is a Spring Boot backend application designed to manage scuba diving logs through a secure RESTful API. 
+
+The system allows divers to create, manage, and review detailed records of their dives, including information such as dive location, depth, duration, dive buddies, and personal notes. Dive entries can also include uploaded images, which are stored using object storage and linked to the corresponding dive log.
+
+The application supports both anonymous and authenticated users. Anonymous users can browse dive logs, while registered users can create and manage their own entries. Authentication is implemented using JWT tokens, and role-based access control ensures that users can only modify their own data while administrators have full management privileges.
+
+The project demonstrates the design of a modern backend service built with a layered architecture, secure authentication mechanisms, database persistence, and cloud-ready file storage.
+
+---
+
+## 🦑 Key Features
 
 - Full CRUD support for divers and dive logs
-- Rank system based on total logged dives
-- Certification & specialty tracking per diver
-- Input validation and global exception handling
-- Unit-tested service layer with JUnit and Mockito
-- Modular, layered architecture (DTOs, mappers, services, controllers)
-- Clean logging with SLF4J
+- Dive log images and profile pictures stored using object storage (MinIO)
+- JWT-based authentication and role-based authorization
+- Pagination, sorting, and filtering for dive logs
+- Input validation and centralized exception handling
+- Modular layered architecture (controllers, services, repositories, DTOs, mappers)
+- Comprehensive testing with JUnit, Mockito, and JaCoCo coverage reporting
+- Structured logging using SLF4J
 
 ---
 
-## ⚙️ Technologies
+## ⚙️ Technology Stack
 
-- Java 17
-- Spring Boot 3
-- Spring Data JPA (Hibernate)
-- MySQL
-- Maven
-- JUnit 5 + Mockito
-- IntelliJ IDEA
+- **Backend:** Java, Spring Boot, Spring Security, Spring Data JPA (Hibernate)
+- **Authentication:** JSON Web Tokens (JWT)
+- **Database:** MariaDB
+- **Object Storage:** MinIO
+- **Testing:** JUnit 5, Mockito, JaCoCo
+- **Infrastructure:** Docker, Docker Compose
+- **Code Quality:** Checkstyle
+
+---
+
+## 🧩 Architecture
+
+The application follows a layered architecture separating responsibilities across different components:
+
+- **Controllers** handle HTTP requests and responses.
+- **Services** contain the core business logic.
+- **Repositories** manage database access through Spring Data JPA.
+- **Security** is handled using Spring Security with JWT-based authentication.
+- **Object storage** (MinIO) is used to store images associated with dive logs and diver profiles.
+
+This structure promotes clear separation of concerns and improves maintainability and testability.
 
 ---
 
 ## 🗂️ Project Structure
 
 ```text
-src/
-├── main/
-│   ├── java/com/lucap/scubakeep/
-│   │   ├── controller/   # REST API endpoints
-│   │   ├── dto/          # Request & response models
-│   │   ├── entity/       # JPA entities
-│   │   ├── exception/    # Custom exceptions & global handlers
-│   │   ├── mapper/       # Entity <-> DTO mappers
-│   │   ├── repository/   # Spring Data JPA interfaces
-│   │   ├── service/      # Business logic layer
-│   │   └── ScubaKeepApplication.java  # Main entry point
-│   └── resources/
-│       ├── application.properties            # Local config (gitignored)
-│       └── application-example.properties    # Sample config
-└── test/
-    └── java/com/lucap/scubakeep/             # Unit tests
+scubakeep
+├── Dockerfile                # Container configuration for the Spring Boot application
+├── docker-compose.yml        # Docker services (MariaDB, MinIO)
+├── checkstyle.xml            # Code style rules used by the Checkstyle plugin
+├── pom.xml                   # Maven configuration
+│
+├── src
+│   ├── main
+│   │   ├── java/com/lucap/scubakeep
+│   │   │
+│   │   │   ├── ScubaKeepApplication.java   # Spring Boot entry point
+│   │   │   │
+│   │   │   ├── config        # Application configuration (security, swagger, MinIO)
+│   │   │   ├── controller    # REST API endpoints
+│   │   │   ├── dto           # Request and response DTOs
+│   │   │   ├── entity        # JPA entities
+│   │   │   ├── exception     # Custom exceptions and global error handling
+│   │   │   ├── mapper        # Entity ↔ DTO mapping
+│   │   │   ├── repository    # Spring Data JPA repositories
+│   │   │   ├── security      # JWT authentication and authorization
+│   │   │   ├── service       # Business logic layer
+│   │   │   ├── storage       # MinIO object storage integration
+│   │   │   └── validation    # Custom validation logic
+│   │   │
+│   │   └── resources
+│   │       ├── application.properties
+│   │       └── application-example.properties
+│   │
+│   └── test
+│       └── java/com/lucap/scubakeep
+│           └── unit and integration tests
 ```
 
 ---
 
-## ▶️ How to Run Locally
+## 🔐 Authentication & Authorization
 
-### 1. Clone the repository
+The API uses **JWT-based authentication** implemented with Spring Security.
 
-```bash
-git clone https://github.com/luca-pal/ScubaKeep.git
-cd ScubaKeep
-```
-### 2. Set up the database
+Users authenticate through the `/auth/token` endpoint and receive a JSON Web Token (JWT). This token must be included in subsequent requests using the `Authorization` header.
 
-Log into MySQL and run:
+The application supports two roles:
 
-```sql
-CREATE DATABASE scubakeep_db;
-```
+- **USER** — can manage their own dive logs and profile data.
+- **ADMIN** — can manage all users and dive logs.
 
-Create a user:
-
-```sql
-CREATE USER 'scubakeep_user'@'localhost' IDENTIFIED BY 'your_password';
-GRANT ALL PRIVILEGES ON scubakeep_db.* TO 'scubakeep_user'@'localhost';
-```
-
-### 3. Configure application properties
-
-Copy the example config file:
-
-```bash
-cp src/main/resources/application-example.properties src/main/resources/application.properties
-```
-
-Then edit `application.properties` with your local DB credentials.
-
-### 4. Run the application
-
-```bash
-./mvnw spring-boot:run
-```
-
-Or open the project from your IDE.
+Access control is enforced through Spring Security configuration and service-layer checks to ensure that users can only modify resources they own, while administrators have full access.
 
 ---
 
-## 🔗 Sample Endpoints
+## ▶️ Running the Project
 
-All endpoints follow RESTful conventions and are prefixed with `/api`.
+### Start the Application
 
-### Divers
+Clone the repository and run:
 
-- `GET    /api/divers` – Get all divers
-- `GET    /api/divers/{id}` – Get a diver by ID
-- `POST   /api/divers` – Create a new diver
-- `PUT    /api/divers/{id}` – Update an existing diver
-- `DELETE /api/divers/{id}` – Delete a diver
+```bash
+docker-compose up --build
+```
+This command builds and starts all required services:
+
+- **Spring Boot application**
+- **MariaDB database**
+- **MinIO object storage**
+
+Docker Compose orchestrates the containers and configures the networking between the application, the database, and the object storage service.
+
+### Access the Application
+
+Once the containers are running, the API will be available at:
+
+http://localhost:8080
+
+Interactive API documentation is available through Swagger UI:
+
+http://localhost:8080/swagger-ui.html
+
+### Object Storage Console
+
+The MinIO web console can be accessed at:
+
+http://localhost:9001
+
+MinIO is used to store images associated with dive logs and diver profiles.
+
+---
+
+## 🔗 API Overview
+
+The API exposes endpoints for authentication, diver management, and dive log management. Interactive documentation is available through **Swagger UI**, but the main resources are summarized below.
+
+### Authentication
+
+| Method | Endpoint | Description |
+|------|------|------|
+| POST | `/auth/register` | Create a new user account |
+| POST | `/auth/token` | Authenticate and obtain a JWT token |
 
 ### Dive Logs
 
-- `GET    /api/divelogs` – Get all dive logs
-- `GET    /api/divelogs/{id}` – Get a dive log by ID
-- `POST   /api/divelogs` – Create a new dive log
-- `PUT    /api/divelogs/{id}` – Update an existing dive log
-- `DELETE /api/divelogs/{id}` – Delete a dive log
+| Method | Endpoint | Description |
+|------|------|------|
+| GET | `/api/divelogs` | Retrieve a paginated list of dive logs |
+| GET | `/api/divelogs/{id}` | Retrieve a specific dive log |
+| POST | `/api/divelogs` | Create a new dive log |
+| PUT | `/api/divelogs/{id}` | Update an existing dive log |
+| DELETE | `/api/divelogs/{id}` | Delete a dive log |
+
+Dive logs can be **filtered, sorted, and paginated** using query parameters.
+
+### Dive Log Images
+
+| Method | Endpoint | Description |
+|------|------|------|
+| POST | `/api/divelogs/{id}/image` | Upload an image for a dive log |
+| GET | `/api/divelogs/{id}/image` | Retrieve the image associated with a dive log |
+
+Images are stored in **MinIO object storage**.
+
+### Divers
+
+| Method | Endpoint | Description                            |
+|------|------|----------------------------------------|
+| GET | `/api/divers` | Retrieve all divers (admin only access) |
+| GET | `/api/divers/{id}` | Retrieve a specific diver              |
+| PUT | `/api/divers/{id}` | Update diver information               |
+| DELETE | `/api/divers/{id}` | Delete a diver           |
+
+### Diver Profile Images
+
+| Method | Endpoint | Description |
+|------|------|------|
+| POST | `/api/divers/{id}/image` | Upload a diver profile picture |
+| GET | `/api/divers/{id}/image` | Retrieve the diver profile picture |
 
 ---
 
-## 🔬 How to Run Tests
+## 🔬 Testing
 
-This project includes unit tests for the business logic layer using JUnit 5 and Mockito. To execute the tests, run:
+The project includes unit and integration tests to verify the correctness of the service layer and the application configuration.
+
+### Testing Tools
+
+- **JUnit 5** for writing and executing tests
+- **Mockito** for mocking dependencies in unit tests
+- **Spring Boot Test** for loading the application context during integration testing
+- **JaCoCo** for measuring test coverage
+
+### Running the Tests
+
+Tests can be executed using Maven:
 
 ```bash
 mvn test
 ```
 
-This will automatically:
+JaCoCo generates a coverage report after the test execution. The current test suite achieves almost 90% code coverage, the report can be found at:
 
-- Compile test sources
-- Run all tests inside `src/test/java`
-- Display the results in the terminal
+`target/site/jacoco/index.html`
 
 ---
 
